@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Kopano MAPI resource
+Type=AkonadiResource
+Exec=akonadi_kopano_resource
+Icon=network-server
+
+X-Akonadi-MimeTypes=message/rfc822
+X-Akonadi-Capabilities=Resource,NeedsNetwork,MailTransport
+X-Akonadi-Identifier=akonadi_kopano_resource
