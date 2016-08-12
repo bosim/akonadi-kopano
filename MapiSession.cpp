@@ -61,6 +61,8 @@ Session::Session(const QString &server, const QString &username, const QString &
   sopt.no_recipients_workaround = true;   // do not stop processing mail on empty recipient table
   sopt.add_received_date = true;   
 
+  imopt_default_delivery_options(&dopt);
+
   // Initialize mapi system
   HRESULT hr = S_OK;
   hr = MAPIInitialize(NULL);
@@ -343,11 +345,48 @@ int Session::retrieveItem(const Akonadi::Item &item, KMime::Message::Ptr& msg) {
 //--------------------------------------------------------------------------------
 
 int Session::sendItem(const Akonadi::Item &item) {
-  QByteArray data;
-  QDomDocument doc;
+  HRESULT hr = S_OK;
+  LPSPropValue lpPropVal = NULL;
+  ULONG ulObjType;
+  IMAPIFolder *lpFolder = NULL;
+  LPMESSAGE lpMessage = 0;
+  SPropValue propName;
+
+  KMime::Message::Ptr msg = item.payload<KMime::Message::Ptr>();
+  QByteArray bodyText = msg->encodedContent(true);
 
   if ( init() != 0 )
     return -1;
+
+  hr = HrGetOneProp(lpStore, PR_IPM_OUTBOX_ENTRYID, &lpPropVal);
+  if (hr != hrSuccess) {
+    return -1;
+  }
+
+  hr = lpSession->OpenEntry(lpPropVal->Value.bin.cb, (LPENTRYID) lpPropVal->Value.bin.lpb, NULL, MAPI_MODIFY, &ulObjType, (LPUNKNOWN *) &lpFolder);
+  if (hr != hrSuccess) {
+    return -1;
+  }
+
+  hr = lpFolder->CreateMessage(NULL, 0, &lpMessage);        
+  if (hr != hrSuccess) {
+    return -1;
+  }
+
+  hr = IMToMAPI(lpSession, lpStore, lpAddrBook, lpMessage, bodyText.constData(), dopt, lpLogger);
+  if (hr != hrSuccess) {
+    return -1;
+  }
+
+  propName.ulPropTag = PR_DELETE_AFTER_SUBMIT;
+  propName.Value.b = TRUE;
+  lpMessage->SetProps(1, &propName, NULL);
+
+  propName.ulPropTag = PR_MESSAGE_CLASS;
+  propName.Value.LPSZ = const_cast<TCHAR *>(_T("IPM.Note"));
+  lpMessage->SetProps(1, &propName, NULL);
+
+  lpMessage->SubmitMessage(0);
 
   return 0;
 }

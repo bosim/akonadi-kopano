@@ -84,4 +84,5 @@ class Session : public QObject
     ECLogger* lpLogger;
 
     sending_options sopt;
+    delivery_options dopt;
 };
