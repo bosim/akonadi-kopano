@@ -37,6 +37,21 @@
 #include "CommonUtil.h"
 #include "inetmapi/inetmapi.h"
 
+#include <KJob>
+
+class retrieveItemsJob : public KJob {
+  Q_OBJECT
+
+  public:
+  retrieveItemsJob(Akonadi::Collection const& collection, Akonadi::Item::List &items, Akonadi::Item::List &deletedItems, LPMDB lpStore) : collection(collection), items(&items), deletedItems(&deletedItems), lpStore(lpStore) {}
+    void start();
+  private:
+    Akonadi::Collection collection;
+    Akonadi::Item::List* items;
+    Akonadi::Item::List* deletedItems;
+    LPMDB lpStore;
+};
+
 class Session : public QObject
 {
   Q_OBJECT
@@ -53,6 +68,9 @@ class Session : public QObject
     bool abortFetching() {
       return  true;
     }
+
+  protected Q_SLOTS:
+    void retrieveItemsResult(KJob*);
 
   signals:
     void progress(int);

@@ -114,8 +114,8 @@ void Session::recurse(SBinary &sEntryID, Akonadi::Collection& parent, Akonadi::C
   ULONG ulObjType;
   IMAPITable *lpTable = NULL;
   LPSRowSet lpRowSet = NULL;
-  enum { EID, NAME, IMAPID, SUBFOLDERS, CONTAINERCLASS, NUM_COLS };
-  SizedSPropTagArray(NUM_COLS, spt) = { NUM_COLS, {PR_ENTRYID, PR_DISPLAY_NAME_W, PR_EC_IMAP_ID, PR_SUBFOLDERS, PR_CONTAINER_CLASS_A } };
+  enum { EID, NAME, SUBFOLDERS, CONTAINERCLASS, NUM_COLS };
+  SizedSPropTagArray(NUM_COLS, spt) = { NUM_COLS, {PR_ENTRYID, PR_DISPLAY_NAME_W, PR_SUBFOLDERS, PR_CONTAINER_CLASS_A } };
   char* strEntryID;
   char folderName[255];
   QStringList contentTypes;
@@ -258,7 +258,7 @@ exit:
 
 }
 
-int Session::retrieveItems(Akonadi::Collection const& collection, Akonadi::Item::List& items, Akonadi::Item::List &deletedItems) {
+void retrieveItemsJob::start() {
   IMAPIFolder *lpFolder = NULL;	
   HRESULT hr = S_OK;
   ULONG ulObjType;
@@ -270,11 +270,8 @@ int Session::retrieveItems(Akonadi::Collection const& collection, Akonadi::Item:
   enum { EID, SIZE, NUM_COLS };
   SizedSPropTagArray(NUM_COLS, spt) = { NUM_COLS, {PR_ENTRYID, PR_MESSAGE_SIZE} };
 
-  if ( init() != 0 )
-    return -1;
-
   if(collection.remoteId() == "/")
-    return 0;
+    goto exit;
 
   Util::hex2bin(collection.remoteId().toStdString().c_str(), 
 		strlen(collection.remoteId().toStdString().c_str()),
@@ -315,13 +312,11 @@ int Session::retrieveItems(Akonadi::Collection const& collection, Akonadi::Item:
 		    lpRowSet->aRow[i].lpProps[EID].Value.bin.lpb, 
 		    &strEntryID, NULL);
       
-      PRINT_DEBUG("Got " << strEntryID);
-
       item.setParentCollection(collection);
       item.setRemoteId(strEntryID);
       item.setRemoteRevision(QString::number(1));
 
-      items << item;
+      (*items) << item;
       
     }
 
@@ -333,8 +328,21 @@ int Session::retrieveItems(Akonadi::Collection const& collection, Akonadi::Item:
   }
 
  exit:
-  return items.count();
+  emitResult();
 
+}
+
+int Session::retrieveItems(Akonadi::Collection const& collection, Akonadi::Item::List &items, Akonadi::Item::List &deletedItems) {
+  KJob* job = new retrieveItemsJob(collection, items, deletedItems, lpStore);
+  connect(job, SIGNAL(result(KJob*)),
+          this, SLOT(retrieveItemsResult(KJob*)));
+  job->start();
+
+  return 0;
+}
+
+void Session::retrieveItemsResult(KJob* job) {
+  PRINT_DEBUG("retrieveItemsResult job is done");
 }
 
 int Session::retrieveItem(const Akonadi::Item &item, KMime::Message::Ptr& msg) {
