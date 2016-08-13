@@ -138,14 +138,27 @@ void Session::recurse(SBinary &sEntryID, Akonadi::Collection& parent, Akonadi::C
   hr = lpTable->QueryRows(50, 0, &lpRowSet);
   if (hr != hrSuccess)
     goto exit;
+
+  if(lpRowSet->cRows == 0) {
+    goto exit;
+  }
 	
   for (ULONG i = 0; i < lpRowSet->cRows; ++i) {
     Akonadi::Collection collection;
 
-    if (PROP_TYPE(lpRowSet->aRow[i].lpProps[NAME].ulPropTag) == PT_UNICODE) {
-      wcstombs(folderName, lpRowSet->aRow[i].lpProps[NAME].Value.lpszW, 255);
-      Util::bin2hex(lpRowSet->aRow[i].lpProps[EID].Value.bin.cb, 
-		    lpRowSet->aRow[i].lpProps[EID].Value.bin.lpb, 
+    LPSPropValue lpProps = lpRowSet->aRow[i].lpProps;
+
+    if (PROP_TYPE(lpProps[CONTAINERCLASS].ulPropTag) == PT_STRING8 &&
+      stricmp(lpProps[CONTAINERCLASS].Value.lpszA, "IPM") != 0 && 
+      stricmp(lpProps[CONTAINERCLASS].Value.lpszA, "IPF.NOTE") != 0
+    ) {
+	continue;
+    }
+
+    if (PROP_TYPE(lpProps[NAME].ulPropTag) == PT_UNICODE) {
+      wcstombs(folderName, lpProps[NAME].Value.lpszW, 255);
+      Util::bin2hex(lpProps[EID].Value.bin.cb, 
+		    lpProps[EID].Value.bin.lpb, 
 		    &strEntryID, NULL);
 
       PRINT_DEBUG("Got " << folderName);
@@ -157,8 +170,9 @@ void Session::recurse(SBinary &sEntryID, Akonadi::Collection& parent, Akonadi::C
 
       collections.append(collection);
     }
-    if (PROP_TYPE(lpRowSet->aRow[i].lpProps[SUBFOLDERS].ulPropTag) == PT_BOOLEAN) {
-      recurse(lpRowSet->aRow[i].lpProps[EID].Value.bin, collection, collections);
+    if (PROP_TYPE(lpProps[SUBFOLDERS].ulPropTag) == PT_BOOLEAN && 
+	lpProps[SUBFOLDERS].Value.b) {
+      recurse(lpProps[EID].Value.bin, collection, collections);
     }
   }
 
@@ -286,8 +300,7 @@ int Session::retrieveItems(Akonadi::Collection const& collection, Akonadi::Item:
   }
 
   while(TRUE) {
-    // returns 50 rows from the table, beginning at the current cursor position
-    hr = lpTable->QueryRows(50, 0, &lpRowSet);
+    hr = lpTable->QueryRows(100, 0, &lpRowSet);
     if (hr != hrSuccess)
       goto exit;
 
