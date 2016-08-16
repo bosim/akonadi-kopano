@@ -9,6 +9,12 @@ ItemsMovedJob::ItemsMovedJob(Akonadi::Item::List const& items, const Akonadi::Co
 }
 
 ItemsMovedJob::~ItemsMovedJob() {
+  if(lpSrcFolder) {
+    lpSrcFolder->Release();
+  }
+  if(lpDstFolder) {
+    lpDstFolder->Release();
+  }
 }
 
 void ItemsMovedJob::start() {

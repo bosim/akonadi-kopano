@@ -25,10 +25,15 @@
 #include <Akonadi/ItemCreateJob>
 #include <QTimer>
 #include <KMime/Message>
+
+#include "RetrieveItemJob.h"
+#include "RetrieveItemsJob.h"
+#include "ItemsMovedJob.h"
+
 class Session;
 
 class MailResource : public Akonadi::ResourceBase,
-                                public Akonadi::AgentBase::Observer,
+                                public Akonadi::AgentBase::ObserverV4,
 				public Akonadi::TransportResourceBase
 {
   Q_OBJECT
@@ -44,6 +49,7 @@ class MailResource : public Akonadi::ResourceBase,
     void retrieveCollections();
     void retrieveItems(const Akonadi::Collection &col);
     bool retrieveItem(const Akonadi::Item &item, const QSet<QByteArray> &parts);
+    void itemsMoved(const Akonadi::Item::List &items, const Akonadi::Collection &sourceCollection, const Akonadi::Collection &destinationCollection);
     virtual void sendItem(const Akonadi::Item &item);
 
   protected:
@@ -58,6 +64,10 @@ class MailResource : public Akonadi::ResourceBase,
   private:  // methods
     void finish();
 
+  protected Q_SLOTS:
+    void retrieveItemsResult(KJob*);
+    void retrieveItemResult(KJob*);
+    void itemsMovedResult(KJob* job);
   private:  // members
     QTimer *intervalTimer;
     Akonadi::Collection targetCollection;

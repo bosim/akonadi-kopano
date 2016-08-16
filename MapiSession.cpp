@@ -28,6 +28,8 @@
 
 #include <KDebug>
 
+#include "RetrieveItemsJob.h"
+
 //--------------------------------------------------------------------------------
 
 int Session::debugArea()
@@ -218,148 +220,6 @@ int Session::fetchCollections(QString name, Akonadi::Collection::List& collectio
   recurse(sEntryID, root, collections);
 
   return collections.size();
-}
-
-int Session::fetchMessage(SBinary &sEntryID, QByteArray& bodyText) {
-  HRESULT hr = S_OK;
-  LPMESSAGE lpMessage = NULL;
-  LPSTREAM lpStream = NULL;
-  ULONG ulObjType;
-  std::string strMessage;
-  char *szMessage = NULL;
-
-  hr = lpStore->OpenEntry(sEntryID.cb, (LPENTRYID) sEntryID.lpb, &IID_IMessage, MAPI_DEFERRED_ERRORS, &ulObjType, (LPUNKNOWN *) &lpMessage);
-		  
-  if (hr != hrSuccess) {
-    goto exit;
-  }
-
-  hr = lpMessage->OpenProperty(PR_EC_IMAP_EMAIL, &IID_IStream, 0, 0, (LPUNKNOWN*)&lpStream);
-
-  if (hr == hrSuccess) {
-    hr = Util::HrStreamToString(lpStream, strMessage);
-    if (hr == hrSuccess) {
-      strMessage = strMessage.c_str();
-    }
-  } 
-  else {
-    hr = IMToINet(lpSession, lpAddrBook, lpMessage, &szMessage, sopt, lpLogger);
-    if (hr != hrSuccess) {
-      lpLogger->Log(EC_LOGLEVEL_ERROR, "Error converting MAPI to MIME: 0x%08x", hr);
-      goto exit;
-    }
-    strMessage = szMessage;
-  }   
-  
-exit:
-  bodyText = strMessage.c_str();
-  
-  return 0;
-
-}
-
-void retrieveItemsJob::start() {
-  IMAPIFolder *lpFolder = NULL;	
-  HRESULT hr = S_OK;
-  ULONG ulObjType;
-  IMAPITable *lpTable = NULL;
-  LPSRowSet lpRowSet = NULL;
-  ULONG ulRows = 0;
-  SBinary sEntryID;
-  char* strEntryID;
-  enum { EID, SIZE, NUM_COLS };
-  SizedSPropTagArray(NUM_COLS, spt) = { NUM_COLS, {PR_ENTRYID, PR_MESSAGE_SIZE} };
-
-  if(collection.remoteId() == "/")
-    goto exit;
-
-  Util::hex2bin(collection.remoteId().toStdString().c_str(), 
-		strlen(collection.remoteId().toStdString().c_str()),
-		&sEntryID.cb, &sEntryID.lpb, NULL);
-
-  hr = lpStore->OpenEntry(sEntryID.cb, (LPENTRYID) sEntryID.lpb, 
-			  &IID_IMAPIFolder, 0, &ulObjType, 
-			  (LPUNKNOWN *)&lpFolder);
-
-  if (hr != hrSuccess) {
-    goto exit;
-  }
-	
-  hr = lpFolder->GetContentsTable(0, &lpTable);
-  if (hr != hrSuccess) {
-    goto exit;
-  }
-
-  // Set the columns of the table
-  hr = lpTable->SetColumns((LPSPropTagArray)&spt, 0);
-  if (hr != hrSuccess) {
-    goto exit;
-  }
-
-  while(TRUE) {
-    hr = lpTable->QueryRows(100, 0, &lpRowSet);
-    if (hr != hrSuccess)
-      goto exit;
-
-    if (lpRowSet->cRows == 0)
-      break;
-
-    for (int i = 0; i < lpRowSet->cRows; i++) {
-
-      Akonadi::Item item;
-
-      Util::bin2hex(lpRowSet->aRow[i].lpProps[EID].Value.bin.cb, 
-		    lpRowSet->aRow[i].lpProps[EID].Value.bin.lpb, 
-		    &strEntryID, NULL);
-      
-      item.setParentCollection(collection);
-      item.setRemoteId(strEntryID);
-      item.setRemoteRevision(QString::number(1));
-
-      (*items) << item;
-      
-    }
-
-    ulRows += lpRowSet->cRows;
-
-    // Free rows and reset variable
-    FreeProws(lpRowSet);
-    lpRowSet = NULL;
-  }
-
- exit:
-  emitResult();
-
-}
-
-int Session::retrieveItems(Akonadi::Collection const& collection, Akonadi::Item::List &items, Akonadi::Item::List &deletedItems) {
-  KJob* job = new retrieveItemsJob(collection, items, deletedItems, lpStore);
-  connect(job, SIGNAL(result(KJob*)),
-          this, SLOT(retrieveItemsResult(KJob*)));
-  job->start();
-
-  return 0;
-}
-
-void Session::retrieveItemsResult(KJob* job) {
-  PRINT_DEBUG("retrieveItemsResult job is done");
-}
-
-int Session::retrieveItem(const Akonadi::Item &item, KMime::Message::Ptr& msg) {
-  SBinary sEntryID;
-
-  Util::hex2bin(item.remoteId().toStdString().c_str(), 
-		strlen(item.remoteId().toStdString().c_str()),
-		&sEntryID.cb, &sEntryID.lpb, NULL);
-
-  QByteArray bodyText;
-
-  fetchMessage(sEntryID, bodyText);
-
-  msg->setContent(KMime::CRLFtoLF(bodyText));
-  msg->parse();
-
-  return 0;
 }
 
 

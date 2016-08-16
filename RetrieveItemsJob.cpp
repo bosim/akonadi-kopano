@@ -9,6 +9,8 @@ RetrieveItemsJob::RetrieveItemsJob(Akonadi::Collection const& collection, Sessio
 }
 
 RetrieveItemsJob::~RetrieveItemsJob() {
+  kDebug() << "RetrieveItemsJob destructor";
+
   if(lpFolder) {
     lpFolder->Release();
   }

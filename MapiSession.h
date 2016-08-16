@@ -17,6 +17,9 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifndef MAPISESSION_H
+#define MAPISESSION_H
+
 #include <akonadi/resourcebase.h>
 #include <QObject>
 #include <QNetworkAccessManager>
@@ -37,21 +40,6 @@
 #include "CommonUtil.h"
 #include "inetmapi/inetmapi.h"
 
-#include <KJob>
-
-class retrieveItemsJob : public KJob {
-  Q_OBJECT
-
-  public:
-  retrieveItemsJob(Akonadi::Collection const& collection, Akonadi::Item::List &items, Akonadi::Item::List &deletedItems, LPMDB lpStore) : collection(collection), items(&items), deletedItems(&deletedItems), lpStore(lpStore) {}
-    void start();
-  private:
-    Akonadi::Collection collection;
-    Akonadi::Item::List* items;
-    Akonadi::Item::List* deletedItems;
-    LPMDB lpStore;
-};
-
 class Session : public QObject
 {
   Q_OBJECT
@@ -60,17 +48,33 @@ class Session : public QObject
     Session(const QString &server, const QString &username, const QString &password);
     ~Session();
 
+    int init();
     int fetchCollections(QString name, Akonadi::Collection::List& collections);
-    int retrieveItems(Akonadi::Collection const& collection, Akonadi::Item::List& items, Akonadi::Item::List &deletedItems);
-    int retrieveItem(const Akonadi::Item &item, KMime::Message::Ptr& msg);
     int sendItem(const Akonadi::Item &item);
+
+    LPMDB getLpStore() {
+      return lpStore;
+    }
+
+    IMAPISession* getLpSession() {
+      return lpSession;
+    }
+
+    IAddrBook* getLpAddrBook() {
+      return lpAddrBook;
+    }
+
+    ECLogger* getLpLogger() {
+      return lpLogger;
+    }
 
     bool abortFetching() {
       return  true;
     }
 
-  protected Q_SLOTS:
-    void retrieveItemsResult(KJob*);
+
+    sending_options sopt;
+    delivery_options dopt;
 
   signals:
     void progress(int);
@@ -78,7 +82,6 @@ class Session : public QObject
     void authRequired();
 
   private:
-    int init();
     static int debugArea();
     static int debugArea2();
 
@@ -96,11 +99,10 @@ class Session : public QObject
     QString password;
 
     IMAPISession *lpSession;
-    LPMDB lpStore;
-
     IAddrBook *lpAddrBook;
+    LPMDB lpStore;
     ECLogger* lpLogger;
 
-    sending_options sopt;
-    delivery_options dopt;
 };
+
+#endif

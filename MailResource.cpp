@@ -94,34 +94,60 @@ void MailResource::retrieveCollections()
 
 void MailResource::retrieveItems(const Akonadi::Collection &collection)
 {
-  Akonadi::Item::List items;
-  Akonadi::Item::List deletedItems;
-
-  kDebug() << "Collection " << collection.name();
-
-  session->retrieveItems(collection, items, deletedItems);
-
-  itemsRetrieved(items);
+  KJob* job = new RetrieveItemsJob(collection, session);
+  connect(job, SIGNAL(result(KJob*)),
+          this, SLOT(retrieveItemsResult(KJob*)));
+  job->start();
 }
+
+void MailResource::retrieveItemsResult(KJob* job) {
+  RetrieveItemsJob* req = qobject_cast<RetrieveItemsJob*>(job);
+  kDebug() << "retrieveItemsResult job is done";
+  itemsRetrieved(req->items);
+}
+
 
 //--------------------------------------------------------------------------------
 
 bool MailResource::retrieveItem(const Akonadi::Item &item, const QSet<QByteArray> &parts)
 {
-  kDebug() << "retrieveItem";
-  KMime::Message::Ptr msg(new KMime::Message);
-
-  session->retrieveItem(item, msg);
-
-  Akonadi::Item tmpItem(item);
-
-  tmpItem.setMimeType(QLatin1String("message/rfc822"));  // mail
-  tmpItem.setPayload<KMime::Message::Ptr>(msg);
-
-  itemRetrieved(tmpItem);
-
+  KJob* job = new RetrieveItemJob(item, session);
+  connect(job, SIGNAL(result(KJob*)),
+          this, SLOT(retrieveItemResult(KJob*)));
+  job->start();
   return true;
 }
+
+void MailResource::retrieveItemResult(KJob* job) {
+  RetrieveItemJob* req = qobject_cast<RetrieveItemJob*>(job);
+  kDebug() << "retrieveItemsResult job is done";
+  itemRetrieved(req->item);
+}
+
+//--------------------------------------------------------------------------------
+
+void MailResource::itemsMoved(const Akonadi::Item::List &items, const Akonadi::Collection &sourceCollection, const Akonadi::Collection &destinationCollection)
+{
+  KJob* job = new ItemsMovedJob(items, sourceCollection, 
+				destinationCollection, session);
+  connect(job, SIGNAL(result(KJob*)),
+          this, SLOT(itemsMovedResult(KJob*)));
+  job->start();
+}
+
+void MailResource::itemsMovedResult(KJob* job) {
+  ItemsMovedJob* req = qobject_cast<ItemsMovedJob*>(job);
+  if(req->error()) {
+    QString errorString = QString("MAPI error: ") + req->error();
+    kDebug() << "Error " << errorString;
+    cancelTask(errorString);
+  }
+  else {
+    kDebug() << "itemsMovedResult job is done";
+    changesCommitted(req->items);
+  }
+}
+
 
 //--------------------------------------------------------------------------------
 

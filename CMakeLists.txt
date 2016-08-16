@@ -60,6 +60,9 @@ set(kopanoresource_SRCS
   MailResource.cpp
   SettingsDialog.cpp
   MapiSession.cpp
+  RetrieveItemsJob.cpp
+  RetrieveItemJob.cpp
+  ItemsMovedJob.cpp
 )
 
 install( FILES kopanoresource.desktop DESTINATION "${CMAKE_INSTALL_PREFIX}/share/akonadi/agents" )
