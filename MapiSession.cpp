@@ -85,6 +85,10 @@ Session::~Session() {
 
 int Session::init()
 {
+  if(lpSession) {
+    return 0;
+  }
+
   HRESULT hr = S_OK;
 
   hr = HrOpenECSession(lpLogger, &lpSession, "test", "0", 

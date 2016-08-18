@@ -9,8 +9,6 @@ RetrieveItemsJob::RetrieveItemsJob(Akonadi::Collection const& collection, Sessio
 }
 
 RetrieveItemsJob::~RetrieveItemsJob() {
-  kDebug() << "RetrieveItemsJob destructor";
-
   if(lpFolder) {
     lpFolder->Release();
   }
@@ -24,16 +22,18 @@ RetrieveItemsJob::~RetrieveItemsJob() {
 
 void RetrieveItemsJob::start() {
 
-  enum { EID, SIZE, NUM_COLS };
+  enum { EID, FLAGS, NUM_COLS };
 
   SizedSPropTagArray(NUM_COLS, spt) = { 
-    NUM_COLS, {PR_ENTRYID, PR_MESSAGE_SIZE} 
+    NUM_COLS, {PR_ENTRYID, PR_MESSAGE_FLAGS} 
   };
 
   if(collection.remoteId() == "/") {
     emitResult();
     return;
   }
+
+  kDebug() << "Collection " <<collection.remoteId();
 
   SBinary sEntryID;
   Util::hex2bin(collection.remoteId().toStdString().c_str(), 
@@ -86,10 +86,19 @@ void RetrieveItemsJob::start() {
       Util::bin2hex(lpRowSet->aRow[i].lpProps[EID].Value.bin.cb, 
 		    lpRowSet->aRow[i].lpProps[EID].Value.bin.lpb, 
 		    &strEntryID, NULL);
+
+      kDebug() << strEntryID;
       
       item.setParentCollection(collection);
       item.setRemoteId(strEntryID);
       item.setRemoteRevision(QString::number(1));
+
+      if(lpRowSet->aRow[i].lpProps[FLAGS].Value.ul & MSGFLAG_READ) {
+        item.setFlag(Akonadi::MessageFlags::Seen);
+      }
+      if(lpRowSet->aRow[i].lpProps[FLAGS].Value.ul & ~MSGFLAG_READ) {
+        item.clearFlag(Akonadi::MessageFlags::Seen);
+      }
 
       items << item;
       

@@ -29,6 +29,8 @@
 #include "RetrieveItemJob.h"
 #include "RetrieveItemsJob.h"
 #include "ItemsMovedJob.h"
+#include "ItemAddedJob.h"
+#include "ItemsFlagsChangedJob.h"
 
 class Session;
 
@@ -50,7 +52,10 @@ class MailResource : public Akonadi::ResourceBase,
     void retrieveItems(const Akonadi::Collection &col);
     bool retrieveItem(const Akonadi::Item &item, const QSet<QByteArray> &parts);
     void itemsMoved(const Akonadi::Item::List &items, const Akonadi::Collection &sourceCollection, const Akonadi::Collection &destinationCollection);
-    virtual void sendItem(const Akonadi::Item &item);
+    void itemAdded(const Akonadi::Item &item, const Akonadi::Collection &collection);
+    void itemsFlagsChanged(const Akonadi::Item::List &items, const QSet<QByteArray> &addedFlags,
+                           const QSet<QByteArray> &removedFlags);
+    void sendItem(const Akonadi::Item &item);
 
   protected:
     virtual void aboutToQuit();
@@ -68,6 +73,8 @@ class MailResource : public Akonadi::ResourceBase,
     void retrieveItemsResult(KJob*);
     void retrieveItemResult(KJob*);
     void itemsMovedResult(KJob* job);
+    void itemAddedResult(KJob* job);
+    void itemsFlagsChangedResult(KJob* job);
   private:  // members
     QTimer *intervalTimer;
     Akonadi::Collection targetCollection;

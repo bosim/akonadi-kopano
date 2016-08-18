@@ -26,24 +26,28 @@
 #include <mapiutil.h>
 
 #include <kopano/Util.h>
+#include <KMime/Message>
+
+#include <mapi.h>
+#include <mapiutil.h>
 
 #include "MapiSession.h"
 
-class RetrieveItemsJob : public KJob {
+class ItemsFlagsChangedJob : public KJob {
   Q_OBJECT
 
   public:
-    RetrieveItemsJob(Akonadi::Collection const& collection, Session* session);
-    ~RetrieveItemsJob();
+    ItemsFlagsChangedJob(const Akonadi::Item::List &items, const QSet<QByteArray> &addedFlags, const QSet<QByteArray> &removedFlags, Session* session); 
+    ~ItemsFlagsChangedJob();
     void start();
     
     Akonadi::Item::List items;
-  private:
-    Akonadi::Collection collection;
-    LPMDB lpStore;
+    QSet<QByteArray> addedFlags;
+    QSet<QByteArray> removedFlags;
 
-    /* Locals */
-    IMAPIFolder *lpFolder;	
-    IMAPITable *lpTable;
-    LPSRowSet lpRowSet;
+  private:
+    Session* session;
+
+    /* Local */
+    LPMESSAGE lpMessage;
 };

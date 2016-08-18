@@ -17,6 +17,10 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <Akonadi/ChangeRecorder>
+#include <Akonadi/CollectionFetchScope>
+#include <Akonadi/ItemFetchScope>
+
 #include <MailResource.h>
 #include <SettingsDialog.h>
 #include <MapiSession.h>
@@ -34,9 +38,13 @@
 //--------------------------------------------------------------------------------
 
 MailResource::MailResource(const QString &id)
-  : ResourceBase(id), session(0), downloadFinished(false)
-{
+  : ResourceBase(id), session(0), downloadFinished(false) {
   kDebug() << "Constructor";
+
+  changeRecorder()->fetchCollection(true);
+  changeRecorder()->itemFetchScope().fetchFullPayload(true);
+  changeRecorder()->itemFetchScope().setFetchModificationTime(false);
+  changeRecorder()->itemFetchScope().setFetchTags(true);
 
   new SettingsAdaptor(Settings::self());
   QDBusConnection::sessionBus()
@@ -144,6 +152,51 @@ void MailResource::itemsMovedResult(KJob* job) {
   }
   else {
     kDebug() << "itemsMovedResult job is done";
+    changesCommitted(req->items);
+  }
+}
+
+//--------------------------------------------------------------------------------
+
+void MailResource::itemAdded(const Akonadi::Item &item, const Akonadi::Collection &collection) {
+  KJob* job = new ItemAddedJob(item, collection, session);
+  connect(job, SIGNAL(result(KJob*)),
+          this, SLOT(itemAddedResult(KJob*)));
+  job->start();
+  
+}
+
+void MailResource::itemAddedResult(KJob* job) {
+  ItemAddedJob* req = qobject_cast<ItemAddedJob*>(job);
+  if(req->error()) {
+    QString errorString = QString("MAPI error: ") + req->error();
+    kDebug() << "Error " << errorString;
+    cancelTask(errorString);
+  }
+  else {
+    kDebug() << "itemsAddedResult job is done";
+    changeCommitted(req->item);
+  }
+}
+
+//--------------------------------------------------------------------------------
+
+void MailResource::itemsFlagsChanged(const Akonadi::Item::List &items, const QSet<QByteArray> &addedFlags, const QSet<QByteArray> &removedFlags) {
+  KJob* job = new ItemsFlagsChangedJob(items, addedFlags, removedFlags, session);
+  connect(job, SIGNAL(result(KJob*)),
+          this, SLOT(itemsFlagsChangedResult(KJob*)));
+  job->start();
+}
+
+void MailResource::itemsFlagsChangedResult(KJob* job) {
+  ItemsFlagsChangedJob* req = qobject_cast<ItemsFlagsChangedJob*>(job);
+  if(req->error()) {
+    QString errorString = QString("MAPI error: ") + req->error();
+    kDebug() << "Error " << errorString;
+    cancelTask(errorString);
+  }
+  else {
+    kDebug() << "itemsFlagsChanged job is done";
     changesCommitted(req->items);
   }
 }
