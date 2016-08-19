@@ -31,6 +31,7 @@
 #include "ItemsMovedJob.h"
 #include "ItemAddedJob.h"
 #include "ItemsFlagsChangedJob.h"
+#include "SendItemJob.h"
 
 class Session;
 
@@ -75,6 +76,7 @@ class MailResource : public Akonadi::ResourceBase,
     void itemsMovedResult(KJob* job);
     void itemAddedResult(KJob* job);
     void itemsFlagsChangedResult(KJob* job);
+    void sendItemResult(KJob* job);
   private:  // members
     QTimer *intervalTimer;
     Akonadi::Collection targetCollection;

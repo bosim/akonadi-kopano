@@ -313,16 +313,21 @@ void MailResource::authRequired()
 
 void MailResource::sendItem(const Akonadi::Item &item)
 {
-    qDebug() << "sendItem" << item.remoteId();
+  KJob* job = new SendItemJob(item, session);
+  connect(job, SIGNAL(result(KJob*)),
+          this, SLOT(sendItemResult(KJob*)));
+  job->start();
+}
 
-    int result = session->sendItem(item);
+void MailResource::sendItemResult(KJob* job) {
+  SendItemJob* req = qobject_cast<SendItemJob*>(job);
+  if(req->error()) {
+    itemSent(req->item, TransportFailed, QString());
+  }
+  else {
+    itemSent(req->item, TransportSucceeded, QString());
+  }
 
-    if(result == 0) {
-      itemSent(item, TransportSucceeded, QString());
-    }
-    else {
-      itemSent(item, TransportFailed, QString());
-    }
 }
 
 AKONADI_RESOURCE_MAIN( MailResource )
