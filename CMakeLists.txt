@@ -60,6 +60,7 @@ set(kopanoresource_SRCS
   MailResource.cpp
   SettingsDialog.cpp
   MapiSession.cpp
+  RetrieveCollectionsJob.cpp
   RetrieveItemsJob.cpp
   RetrieveItemJob.cpp
   ItemsMovedJob.cpp

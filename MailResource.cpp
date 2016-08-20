@@ -91,11 +91,25 @@ void MailResource::retrieveCollections()
     return;
   }
 
-  Akonadi::Collection::List collections;
+  KJob* job = new RetrieveCollectionsJob(name(), session);
+  connect(job, SIGNAL(result(KJob*)),
+          this, SLOT(retrieveCollectionsResult(KJob*)));
+  job->start();
 
-  session->fetchCollections(name(), collections);
 
-  collectionsRetrieved(collections);
+}
+
+void MailResource::retrieveCollectionsResult(KJob* job) {
+  RetrieveCollectionsJob* req = qobject_cast<RetrieveCollectionsJob*>(job);
+  if(req->error()) {
+    QString errorString = QString("MAPI error: ") + req->error();
+    kDebug() << "Error " << errorString;
+    cancelTask(errorString);
+  }
+  else {
+    kDebug() << "retrieveCollectionsResult job is done";
+    collectionsRetrieved(req->collections);
+  }
 }
 
 //--------------------------------------------------------------------------------
@@ -110,8 +124,15 @@ void MailResource::retrieveItems(const Akonadi::Collection &collection)
 
 void MailResource::retrieveItemsResult(KJob* job) {
   RetrieveItemsJob* req = qobject_cast<RetrieveItemsJob*>(job);
-  kDebug() << "retrieveItemsResult job is done";
-  itemsRetrieved(req->items);
+  if(req->error()) {
+    QString errorString = QString("MAPI error: ") + req->error();
+    kDebug() << "Error " << errorString;
+    cancelTask(errorString);
+  }
+  else {
+    kDebug() << "retrieveItemsResult job is done";
+    itemsRetrieved(req->items);
+  }
 }
 
 
@@ -128,8 +149,15 @@ bool MailResource::retrieveItem(const Akonadi::Item &item, const QSet<QByteArray
 
 void MailResource::retrieveItemResult(KJob* job) {
   RetrieveItemJob* req = qobject_cast<RetrieveItemJob*>(job);
-  kDebug() << "retrieveItemsResult job is done";
-  itemRetrieved(req->item);
+  if(req->error()) {
+    QString errorString = QString("MAPI error: ") + req->error();
+    kDebug() << "Error " << errorString;
+    cancelTask(errorString);
+  }
+  else {
+    kDebug() << "retrieveItemsResult job is done";
+    itemRetrieved(req->item);
+  }
 }
 
 //--------------------------------------------------------------------------------

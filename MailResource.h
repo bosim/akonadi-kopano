@@ -26,6 +26,7 @@
 #include <QTimer>
 #include <KMime/Message>
 
+#include "RetrieveCollectionsJob.h"
 #include "RetrieveItemJob.h"
 #include "RetrieveItemsJob.h"
 #include "ItemsMovedJob.h"
@@ -71,6 +72,7 @@ class MailResource : public Akonadi::ResourceBase,
     void finish();
 
   protected Q_SLOTS:
+    void retrieveCollectionsResult(KJob*);
     void retrieveItemsResult(KJob*);
     void retrieveItemResult(KJob*);
     void itemsMovedResult(KJob* job);

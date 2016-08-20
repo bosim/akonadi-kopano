@@ -94,9 +94,11 @@ void RetrieveItemsJob::start() {
       item.setRemoteRevision(QString::number(1));
 
       if(lpRowSet->aRow[i].lpProps[FLAGS].Value.ul & MSGFLAG_READ) {
+        kDebug() << "MSG is READ";
         item.setFlag(Akonadi::MessageFlags::Seen);
       }
-      if(lpRowSet->aRow[i].lpProps[FLAGS].Value.ul & ~MSGFLAG_READ) {
+      else {
+        kDebug() << "MSG is NOT READ";
         item.clearFlag(Akonadi::MessageFlags::Seen);
       }
 

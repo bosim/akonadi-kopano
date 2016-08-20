@@ -49,7 +49,6 @@ class Session : public QObject
     ~Session();
 
     int init();
-    int fetchCollections(QString name, Akonadi::Collection::List& collections);
 
     LPMDB getLpStore() {
       return lpStore;
@@ -83,8 +82,6 @@ class Session : public QObject
   private:
     static int debugArea();
     static int debugArea2();
-
-    void recurse(SBinary &sEntryID, Akonadi::Collection& parent, Akonadi::Collection::List& collections);
 
     QNetworkAccessManager *nam;
     QEventLoop *eventLoop;
