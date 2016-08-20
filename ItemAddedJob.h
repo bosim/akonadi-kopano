@@ -20,6 +20,7 @@
 #include <KJob>
 
 #include <akonadi/resourcebase.h>
+#include <akonadi/kmime/messageflags.h>
 
 #include <mapi.h>
 #include <mapiutil.h>

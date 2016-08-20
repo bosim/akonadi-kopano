@@ -40,7 +40,7 @@ class RetrieveItemsJob : public KJob {
     Akonadi::Item::List items;
   private:
     Akonadi::Collection collection;
-    LPMDB lpStore;
+    Session* session;
 
     /* Locals */
     IMAPIFolder *lpFolder;	

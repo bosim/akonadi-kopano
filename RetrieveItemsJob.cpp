@@ -1,7 +1,6 @@
 #include "RetrieveItemsJob.h"
 
-RetrieveItemsJob::RetrieveItemsJob(Akonadi::Collection const& collection, Session* session) : collection(collection) {
-  lpStore = session->getLpStore();
+RetrieveItemsJob::RetrieveItemsJob(Akonadi::Collection const& collection, Session* session) : collection(collection), session(session) {
 
   lpFolder = NULL;
   lpTable = NULL;
@@ -22,8 +21,11 @@ RetrieveItemsJob::~RetrieveItemsJob() {
 
 void RetrieveItemsJob::start() {
 
-  enum { EID, FLAGS, NUM_COLS };
+  session->init();
 
+  LPMDB lpStore = session->getLpStore();
+
+  enum { EID, FLAGS, NUM_COLS };
   SizedSPropTagArray(NUM_COLS, spt) = { 
     NUM_COLS, {PR_ENTRYID, PR_MESSAGE_FLAGS} 
   };

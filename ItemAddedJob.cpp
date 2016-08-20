@@ -67,6 +67,12 @@ void ItemAddedJob::start() {
   propName.Value.LPSZ = const_cast<TCHAR *>(_T("IPM.Note"));
   lpMessage->SetProps(1, &propName, NULL);  
 
+  if(item.hasFlag(Akonadi::MessageFlags::Seen)) {
+    propName.ulPropTag = PR_MESSAGE_FLAGS;
+    propName.Value.ul = MSGFLAG_READ;
+    lpMessage->SetProps(1, &propName, NULL);  
+  } 
+
   lpMessage->SaveChanges(0);
 
   LPSPropValue lpPropVal = NULL;
