@@ -42,12 +42,7 @@ class RetrieveItemJob : public KJob {
     
     Akonadi::Item item;
   private:
-    /* From session */
-    LPMDB lpStore;
-    IMAPISession* lpSession;
-    IAddrBook* lpAddrBook;
-    ECLogger* lpLogger;
-    sending_options* sopt;
+    Session* session;
 
     /* Local */
     LPMESSAGE lpMessage;

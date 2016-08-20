@@ -1,9 +1,6 @@
 #include "ItemsMovedJob.h"
 
-ItemsMovedJob::ItemsMovedJob(Akonadi::Item::List const& items, const Akonadi::Collection &sourceCollection, const Akonadi::Collection &destinationCollection, Session* session) : items(items), sourceCollection(sourceCollection), destinationCollection(destinationCollection) {
-  session->init();
-
-  lpStore = session->getLpStore();
+ItemsMovedJob::ItemsMovedJob(Akonadi::Item::List const& items, const Akonadi::Collection &sourceCollection, const Akonadi::Collection &destinationCollection, Session* session) : items(items), sourceCollection(sourceCollection), destinationCollection(destinationCollection), session(session) {
   lpSrcFolder = NULL;
   lpDstFolder = NULL;
 }
@@ -18,6 +15,10 @@ ItemsMovedJob::~ItemsMovedJob() {
 }
 
 void ItemsMovedJob::start() {
+  session->init();
+
+  LPMDB lpStore = session->getLpStore();
+
   SBinary sEntryID;
   std::string remoteId = sourceCollection.remoteId().toStdString();
 

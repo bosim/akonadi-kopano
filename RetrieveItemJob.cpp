@@ -1,11 +1,6 @@
 #include "RetrieveItemJob.h"
 
-RetrieveItemJob::RetrieveItemJob(Akonadi::Item const& item, Session* session) : item(item) {
-  lpStore = session->getLpStore();
-  lpSession = session->getLpSession();
-  lpAddrBook = session->getLpAddrBook();
-  lpLogger = session->getLpLogger();
-  sopt = &session->sopt;
+RetrieveItemJob::RetrieveItemJob(Akonadi::Item const& item, Session* session) : item(item), session(session) {
 
   lpMessage = NULL;
 }
@@ -17,6 +12,14 @@ RetrieveItemJob::~RetrieveItemJob() {
 }
 
 void RetrieveItemJob::start() {
+  session->init();
+
+  LPMDB lpStore = session->getLpStore();
+  IMAPISession* lpSession = session->getLpSession();
+  IAddrBook* lpAddrBook = session->getLpAddrBook();
+  ECLogger* lpLogger = session->getLpLogger();
+  sending_options* sopt = &session->sopt;
+
   kDebug() << "retrieveItem";
 
   SBinary sEntryID;

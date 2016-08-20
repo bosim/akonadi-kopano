@@ -44,8 +44,7 @@ class ItemsMovedJob : public KJob {
     Akonadi::Collection sourceCollection;
     Akonadi::Collection destinationCollection;
   private:
-    /* From session */
-    LPMDB lpStore;
+    Session* session;
 
     /* Local */
     IMAPIFolder *lpSrcFolder;	
