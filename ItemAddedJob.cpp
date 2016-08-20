@@ -87,6 +87,8 @@ void ItemAddedJob::start() {
   }
 
   item.setRemoteId(strEntryID);
+  item.setRemoteRevision(QString::number(1));
+  item.setParentCollection(collection);
 
   emitResult();
 }
