@@ -183,6 +183,29 @@ void MailResource::itemsMovedResult(KJob* job) {
 
 //--------------------------------------------------------------------------------
 
+void MailResource::itemsRemoved(const Akonadi::Item::List &items)
+{
+  KJob* job = new ItemsRemovedJob(items, session);
+  connect(job, SIGNAL(result(KJob*)),
+          this, SLOT(itemsRemovedResult(KJob*)));
+  job->start();
+}
+
+void MailResource::itemsRemovedResult(KJob* job) {
+  ItemsRemovedJob* req = qobject_cast<ItemsRemovedJob*>(job);
+  if(req->error()) {
+    QString errorString = QString("MAPI error: ") + req->error();
+    kDebug() << "Error " << errorString;
+    cancelTask(errorString);
+  }
+  else {
+    kDebug() << "itemsRemovedResult job is done";
+    changeProcessed(); 
+  }
+}
+
+//--------------------------------------------------------------------------------
+
 void MailResource::itemAdded(const Akonadi::Item &item, const Akonadi::Collection &collection) {
   KJob* job = new ItemAddedJob(item, collection, session);
   connect(job, SIGNAL(result(KJob*)),
@@ -283,7 +306,6 @@ void MailResource::loadConfiguration()
   }
 
   Settings::self()->readConfig();
-
 
   KWallet::Wallet *wallet = KWallet::Wallet::openWallet(KWallet::Wallet::NetworkWallet(), winIdForDialogs());
   if ( wallet )

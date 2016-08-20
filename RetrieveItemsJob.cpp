@@ -70,7 +70,7 @@ void RetrieveItemsJob::start() {
   }
 
   while(TRUE) {
-    hr = lpTable->QueryRows(100, 0, &lpRowSet);
+    hr = lpTable->QueryRows(MAX_ROWS, 0, &lpRowSet);
     if (hr != hrSuccess) {
       setError((int) hr);
       emitResult();

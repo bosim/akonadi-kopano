@@ -32,6 +32,7 @@
 
 #include "MapiSession.h"
 
+
 class RetrieveItemJob : public KJob {
   Q_OBJECT
 

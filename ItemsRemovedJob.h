@@ -20,32 +20,30 @@
 #include <KJob>
 
 #include <akonadi/resourcebase.h>
-#include <akonadi/kmime/messageflags.h>
 
 #include <mapi.h>
 #include <mapiutil.h>
 
 #include <kopano/Util.h>
+#include <KMime/Message>
+
+#include <mapi.h>
+#include <mapiutil.h>
 
 #include "MapiSession.h"
 
-const int MAX_ROWS=1024;
-
-class RetrieveItemsJob : public KJob {
+class ItemsRemovedJob : public KJob {
   Q_OBJECT
 
   public:
-    RetrieveItemsJob(Akonadi::Collection const& collection, Session* session);
-    ~RetrieveItemsJob();
+    ItemsRemovedJob(Akonadi::Item::List const& items, Session* session); 
+    ~ItemsRemovedJob();
     void start();
     
     Akonadi::Item::List items;
   private:
-    Akonadi::Collection collection;
     Session* session;
 
-    /* Locals */
     IMAPIFolder *lpFolder;	
-    IMAPITable *lpTable;
-    LPSRowSet lpRowSet;
+
 };

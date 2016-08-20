@@ -57,16 +57,17 @@ set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${KDE4_ENABLE_EXCEPTIONS}" )
 ########### next target ###############
 
 set(kopanoresource_SRCS
-  MailResource.cpp
-  SettingsDialog.cpp
-  MapiSession.cpp
-  RetrieveCollectionsJob.cpp
-  RetrieveItemsJob.cpp
-  RetrieveItemJob.cpp
-  ItemsMovedJob.cpp
   ItemAddedJob.cpp
   ItemsFlagsChangedJob.cpp
+  ItemsMovedJob.cpp
+  ItemsRemovedJob.cpp
+  MailResource.cpp
+  MapiSession.cpp
+  RetrieveCollectionsJob.cpp
+  RetrieveItemJob.cpp
+  RetrieveItemsJob.cpp
   SendItemJob.cpp
+  SettingsDialog.cpp
 )
 
 install( FILES kopanoresource.desktop DESTINATION "${CMAKE_INSTALL_PREFIX}/share/akonadi/agents" )

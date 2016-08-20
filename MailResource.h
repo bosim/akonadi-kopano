@@ -26,12 +26,13 @@
 #include <QTimer>
 #include <KMime/Message>
 
+#include "ItemAddedJob.h"
+#include "ItemsFlagsChangedJob.h"
+#include "ItemsMovedJob.h"
+#include "ItemsRemovedJob.h"
 #include "RetrieveCollectionsJob.h"
 #include "RetrieveItemJob.h"
 #include "RetrieveItemsJob.h"
-#include "ItemsMovedJob.h"
-#include "ItemAddedJob.h"
-#include "ItemsFlagsChangedJob.h"
 #include "SendItemJob.h"
 
 class Session;
@@ -57,6 +58,7 @@ class MailResource : public Akonadi::ResourceBase,
     void itemAdded(const Akonadi::Item &item, const Akonadi::Collection &collection);
     void itemsFlagsChanged(const Akonadi::Item::List &items, const QSet<QByteArray> &addedFlags,
                            const QSet<QByteArray> &removedFlags);
+    void itemsRemoved(const Akonadi::Item::List &items);
     void sendItem(const Akonadi::Item &item);
 
   protected:
@@ -77,6 +79,7 @@ class MailResource : public Akonadi::ResourceBase,
     void retrieveItemResult(KJob*);
     void itemsMovedResult(KJob* job);
     void itemAddedResult(KJob* job);
+    void itemsRemovedResult(KJob* job);
     void itemsFlagsChangedResult(KJob* job);
     void sendItemResult(KJob* job);
   private:  // members
