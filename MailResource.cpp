@@ -51,9 +51,6 @@ MailResource::MailResource(const QString &id)
     .registerObject(QLatin1String("/Settings"),
                     Settings::self(), QDBusConnection::ExportAdaptors);
 
-  intervalTimer = new QTimer(this);
-  intervalTimer->setSingleShot(false);
-
   loadConfiguration();
   connect(this, SIGNAL(reloadConfiguration()), this, SLOT(loadConfiguration()));
   connect(this, SIGNAL(abortRequested()), this, SLOT(slotAbortRequested()));
@@ -287,14 +284,6 @@ void MailResource::loadConfiguration()
 
   Settings::self()->readConfig();
 
-  if ( Settings::self()->intervalCheckEnabled() )
-  {
-    intervalTimer->start(Settings::self()->intervalCheckInterval() * 1000 * 60);
-  }
-  else
-  {
-    intervalTimer->stop();
-  }
 
   KWallet::Wallet *wallet = KWallet::Wallet::openWallet(KWallet::Wallet::NetworkWallet(), winIdForDialogs());
   if ( wallet )

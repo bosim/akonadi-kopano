@@ -80,7 +80,6 @@ class MailResource : public Akonadi::ResourceBase,
     void itemsFlagsChangedResult(KJob* job);
     void sendItemResult(KJob* job);
   private:  // members
-    QTimer *intervalTimer;
     Akonadi::Collection targetCollection;
     QString password; // from wallet
     Session *session;
