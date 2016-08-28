@@ -128,7 +128,12 @@ void MailResource::retrieveItemsResult(KJob* job) {
   }
   else {
     kDebug() << "retrieveItemsResult job is done";
-    itemsRetrieved(req->items);
+    if(req->fullSync)  {
+      itemsRetrieved(req->items);
+    }
+    else {
+      itemsRetrievedIncremental(req->items, req->deletedItems);
+    }
   }
 }
 

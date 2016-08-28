@@ -94,7 +94,9 @@ int Session::init()
   hr = HrOpenECSession(lpLogger, &lpSession, "test", "0", 
 		       username.toStdWString().c_str(), 
 		       password.toStdWString().c_str(), 
-		       server.toStdString().c_str());
+		       server.toStdString().c_str(),
+                       EC_PROFILE_FLAGS_NO_NOTIFICATIONS,
+                       NULL, NULL);
   if (hr != hrSuccess) {
     return -1;
   }

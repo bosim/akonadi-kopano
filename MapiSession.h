@@ -40,6 +40,8 @@
 #include "CommonUtil.h"
 #include "inetmapi/inetmapi.h"
 
+#include "SynchronizerState.h"
+
 class Session : public QObject
 {
   Q_OBJECT
@@ -73,6 +75,8 @@ class Session : public QObject
 
     sending_options sopt;
     delivery_options dopt;
+
+    SynchronizerState syncState;
 
   signals:
     void progress(int);

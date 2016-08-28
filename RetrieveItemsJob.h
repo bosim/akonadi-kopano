@@ -40,6 +40,8 @@ class RetrieveItemsJob : public KJob {
     void start();
     
     Akonadi::Item::List items;
+    Akonadi::Item::List deletedItems;
+    bool fullSync;
   private:
     Akonadi::Collection collection;
     Session* session;

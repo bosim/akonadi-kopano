@@ -1,6 +1,7 @@
 #include "RetrieveItemsJob.h"
+#include "Synchronizer.h"
 
-RetrieveItemsJob::RetrieveItemsJob(Akonadi::Collection const& collection, Session* session) : collection(collection), session(session) {
+RetrieveItemsJob::RetrieveItemsJob(Akonadi::Collection const& collection, Session* session) : fullSync(false), collection(collection), session(session) {
 
   lpFolder = NULL;
   lpTable = NULL;
@@ -25,11 +26,6 @@ void RetrieveItemsJob::start() {
 
   LPMDB lpStore = session->getLpStore();
 
-  enum { EID, FLAGS, NUM_COLS };
-  SizedSPropTagArray(NUM_COLS, spt) = { 
-    NUM_COLS, {PR_ENTRYID, PR_MESSAGE_FLAGS} 
-  };
-
   if(collection.remoteId() == "/") {
     emitResult();
     return;
@@ -45,7 +41,8 @@ void RetrieveItemsJob::start() {
   ULONG ulObjType;
   HRESULT hr = lpStore->OpenEntry(sEntryID.cb, 
 				  (LPENTRYID) sEntryID.lpb, 
-				  &IID_IMAPIFolder, 0, &ulObjType, 
+				  &IID_IMAPIFolder, MAPI_BEST_ACCESS, 
+                                  &ulObjType, 
 				  (LPUNKNOWN *)&lpFolder);
 
   if (hr != hrSuccess) {
@@ -53,65 +50,86 @@ void RetrieveItemsJob::start() {
     emitResult();
     return;
   }
-	
-  hr = lpFolder->GetContentsTable(0, &lpTable);
+
+  LPSTREAM lpStream = NULL;
+  ULONG tmp[2] = { 0, 0 };
+  hr = CreateStreamOnHGlobal(GlobalAlloc(GPTR, sizeof(tmp)), 
+                             true, &lpStream);
+  
+  IExchangeExportChanges *lpIEEC = NULL;
+  hr = lpFolder->OpenProperty(PR_CONTENTS_SYNCHRONIZER, 
+                             &IID_IExchangeExportChanges, 0, 0, 
+                             (LPUNKNOWN *)&lpIEEC);
+
   if (hr != hrSuccess) {
-    setError((int) hr);
-    emitResult();
-    return;
   }
 
-  // Set the columns of the table
-  hr = lpTable->SetColumns((LPSPropTagArray)&spt, 0);
-  if (hr != hrSuccess) {
-    setError((int) hr);
-    emitResult();
-    return;
+
+  bool synced = session->syncState.loadState(collection.remoteId(), tmp);
+  if(!synced) {
+    fullSync = true;
   }
 
-  while(TRUE) {
-    hr = lpTable->QueryRows(MAX_ROWS, 0, &lpRowSet);
-    if (hr != hrSuccess) {
-      setError((int) hr);
-      emitResult();
-      return;
+  lpStream->Write(tmp, sizeof(tmp), NULL);
+  lpStream->Commit(0);
+
+  Synchronizer synchronizer;
+  hr = lpIEEC->Config(lpStream, SYNC_NORMAL | SYNC_READ_STATE, 
+                      &synchronizer, NULL, NULL, NULL, 0);
+  if (hr != hrSuccess) {
+  }
+
+  ULONG ulSteps = 0;
+  ULONG ulProgress = 0;
+  do {
+    hr = lpIEEC->Synchronize(&ulSteps, &ulProgress);
+    if(hr != hrSuccess) {
+
+    }
+  } while(hr == SYNC_W_PROGRESS);
+
+  /* Changed */
+  for(int i=0; i < synchronizer.messagesChanged.count(); i++) {
+    QPair<QString, QString> elem = synchronizer.messagesChanged[i];
+
+    QString strEntryID = elem.first;
+    QString strSourceID = elem.second;
+
+    session->syncState.addMapping(collection.remoteId(), 
+                                  strEntryID, strSourceID);
+
+    Akonadi::Item item;
+    item.setParentCollection(collection);
+    item.setRemoteId(strEntryID);
+    item.setRemoteRevision(QString::number(1));
+
+    items << item;
+  }
+
+  /* Deleted */
+  for(int i=0; i < synchronizer.messagesDeleted.count(); i++) {
+    QString strSourceID = synchronizer.messagesDeleted[i];
+    QString strEntryID;
+
+    if(!session->syncState.getMappingBySourceID(collection.remoteId(), strSourceID, strEntryID)) {
+      continue;
     }
 
-    if (lpRowSet->cRows == 0)
-      break;
+    Akonadi::Item item;
+    item.setParentCollection(collection);
+    item.setRemoteId(strEntryID);
+    item.setRemoteRevision(QString::number(1));
 
-    for (unsigned int i = 0; i < lpRowSet->cRows; i++) {
-
-      Akonadi::Item item;
-      char* strEntryID;
-
-      Util::bin2hex(lpRowSet->aRow[i].lpProps[EID].Value.bin.cb, 
-		    lpRowSet->aRow[i].lpProps[EID].Value.bin.lpb, 
-		    &strEntryID, NULL);
-
-      kDebug() << strEntryID;
-      
-      item.setParentCollection(collection);
-      item.setRemoteId(strEntryID);
-      item.setRemoteRevision(QString::number(1));
-
-      if(lpRowSet->aRow[i].lpProps[FLAGS].Value.ul & MSGFLAG_READ) {
-        kDebug() << "MSG is READ";
-        item.setFlag(Akonadi::MessageFlags::Seen);
-      }
-      else {
-        kDebug() << "MSG is NOT READ";
-        item.clearFlag(Akonadi::MessageFlags::Seen);
-      }
-
-      items << item;
-      
-    }
-
-    FreeProws(lpRowSet);
-    lpRowSet = NULL;
+    deletedItems << item;
   }
+  
+  lpIEEC->UpdateState(lpStream);
+  lpStream->Commit(0);
 
+  ULONG ulRead;
+  hr = lpStream->Read(&tmp, sizeof(tmp), &ulRead);
+  session->syncState.saveState(collection.remoteId(), tmp);
+  
   emitResult();
 
 }

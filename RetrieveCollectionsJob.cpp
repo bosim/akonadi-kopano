@@ -21,9 +21,9 @@ RetrieveCollectionsSubJob::~RetrieveCollectionsSubJob() {
 void RetrieveCollectionsSubJob::start() {
   IMAPISession *lpSession = session->getLpSession();  
 
-  enum { EID, NAME, SUBFOLDERS, CONTAINERCLASS, NUM_COLS };
-  SizedSPropTagArray(NUM_COLS, spt) = { NUM_COLS, {PR_ENTRYID, PR_DISPLAY_NAME_W, PR_SUBFOLDERS, PR_CONTAINER_CLASS_A } };
-  char* strEntryID;
+  enum { EID, NAME, SUBFOLDERS, CONTAINERCLASS, PARENT_EID, NUM_COLS };
+  SizedSPropTagArray(NUM_COLS, spt) = { NUM_COLS, {PR_ENTRYID, PR_DISPLAY_NAME_W, PR_SUBFOLDERS, PR_CONTAINER_CLASS_A, PR_PARENT_ENTRYID } };
+  char* strEntryID, *strParentEntryID;
   char folderName[255];
 
   QStringList contentTypes;
@@ -40,7 +40,7 @@ void RetrieveCollectionsSubJob::start() {
     return;
   }
 
-  hr = lpFolder->GetHierarchyTable(0, &lpTable);
+  hr = lpFolder->GetHierarchyTable(CONVENIENT_DEPTH, &lpTable);
   if (hr != hrSuccess) {
     setError((int) hr);
     emitResult();
@@ -48,6 +48,29 @@ void RetrieveCollectionsSubJob::start() {
   }
 
   hr = lpTable->SetColumns((LPSPropTagArray) &spt, 0);
+  if (hr != hrSuccess) {
+    setError((int) hr);
+    emitResult();
+    return;
+  }
+
+  // Set sort criteria
+  LPSSortOrderSet lpSortCriteria = NULL;
+  hr = MAPIAllocateBuffer(CbNewSSortOrderSet(1), (void**)&lpSortCriteria);
+  if (hr != hrSuccess) {
+    setError((int) hr);
+    emitResult();
+    return;
+  }
+
+  lpSortCriteria->cCategories = 0;
+  lpSortCriteria->cExpanded = 0;
+  lpSortCriteria->cSorts = 1;
+  lpSortCriteria->aSort[0].ulOrder = TABLE_SORT_ASCEND;
+  lpSortCriteria->aSort[0].ulPropTag = PR_DEPTH;
+
+  // Orders the rows of the table based on sort criteria
+  hr = lpTable->SortTable(lpSortCriteria, 0);
   if (hr != hrSuccess) {
     setError((int) hr);
     emitResult();
@@ -77,6 +100,7 @@ void RetrieveCollectionsSubJob::start() {
 	continue;
     }
 
+
     if (PROP_TYPE(lpProps[NAME].ulPropTag) == PT_UNICODE) {
       wcstombs(folderName, lpProps[NAME].Value.lpszW, 255);
       Util::bin2hex(lpProps[EID].Value.bin.cb, 
@@ -88,17 +112,21 @@ void RetrieveCollectionsSubJob::start() {
 
       collection.setName(folderName);
       collection.setRemoteId(strEntryID);
-      collection.setParentCollection(parent);
       collection.setContentMimeTypes(contentTypes);
+      collection.setParentCollection(parent);
+
+      Util::bin2hex(lpProps[PARENT_EID].Value.bin.cb, 
+                    lpProps[PARENT_EID].Value.bin.lpb, 
+                    &strParentEntryID, NULL);  
+      
+      for(int j=0; j < collections.count(); j++) {
+        if(collections[j].remoteId() == strParentEntryID) {
+          collection.setParentCollection(collections[j]);
+          break;
+        }
+      }
 
       collections.append(collection);
-    }
-    if (PROP_TYPE(lpProps[SUBFOLDERS].ulPropTag) == PT_BOOLEAN && 
-	lpProps[SUBFOLDERS].Value.b) {
-      RetrieveCollectionsSubJob* job = new RetrieveCollectionsSubJob(lpProps[EID].Value.bin, collection, session);
-      connect(job, SIGNAL(result(KJob*)),
-              this, SLOT(jobResult(KJob*)));
-      job->start();
     }
   }
 
