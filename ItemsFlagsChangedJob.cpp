@@ -19,10 +19,17 @@ void ItemsFlagsChangedJob::start() {
   for(int i=0; i < items.count(); i++) {
     Akonadi::Item item = items[i];
 
+    QStringList splitArr = item.remoteId().split(":");
+    QString collectionSourceKey = splitArr[0];
+    QString itemSourceKey = splitArr[1];
+
+    SBinary sFolderSourceKey; 
+    Hex2Bin(collectionSourceKey, sFolderSourceKey);
+    SBinary sItemSourceKey; 
+    Hex2Bin(itemSourceKey, sItemSourceKey); 
     SBinary sEntryID;
-    Util::hex2bin(item.remoteId().toStdString().c_str(), 
-                  strlen(item.remoteId().toStdString().c_str()),
-                  &sEntryID.cb, &sEntryID.lpb, NULL);
+    EntryIDFromSourceKey(lpStore, sFolderSourceKey, 
+                         sItemSourceKey, sEntryID);
 
     ULONG ulObjType;
     HRESULT hr = lpStore->OpenEntry(sEntryID.cb, 

@@ -46,7 +46,7 @@ void RetrieveItemsJob::start() {
   ULONG ulObjType;
   HRESULT hr = lpStore->OpenEntry(sEntryID.cb, 
 				  (LPENTRYID) sEntryID.lpb, 
-				  &IID_IMAPIFolder, MAPI_BEST_ACCESS, 
+				  &IID_IMAPIFolder, 0, 
                                   &ulObjType, 
 				  (LPUNKNOWN *)&lpFolder);
 

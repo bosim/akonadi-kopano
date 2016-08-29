@@ -32,6 +32,7 @@
 #include <mapiutil.h>
 
 #include "MapiSession.h"
+#include "Utils.h"
 
 class ItemsFlagsChangedJob : public KJob {
   Q_OBJECT

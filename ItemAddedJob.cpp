@@ -76,21 +76,15 @@ void ItemAddedJob::start() {
   lpMessage->SaveChanges(0);
 
   LPSPropValue lpPropVal = NULL;
-  hr = HrGetOneProp(lpMessage, PR_ENTRYID, &lpPropVal);
+  hr = HrGetOneProp(lpMessage, PR_SOURCE_KEY, &lpPropVal);
   if (hr != hrSuccess) {
     setError((int) hr);
     emitResult(); 
     return;
   }
 
-  char* strEntryID;
-  hr = Util::bin2hex(lpPropVal->Value.bin.cb, lpPropVal->Value.bin.lpb, 
-                     &strEntryID, NULL);
-  if (hr != hrSuccess) {
-    setError((int) hr);
-    emitResult(); 
-    return;
-  }
+  QString strEntryID;
+  Bin2Hex(lpPropVal->Value.bin, strEntryID);
 
   item.setRemoteId(strEntryID);
   item.setRemoteRevision(QString::number(1));
