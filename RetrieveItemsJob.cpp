@@ -33,10 +33,15 @@ void RetrieveItemsJob::start() {
 
   kDebug() << "Collection " <<collection.remoteId();
 
+  SBinary folderSourceKey;
+  Hex2Bin(collection.remoteId(), folderSourceKey);
+
+  SBinary itemSourceKey;
+  itemSourceKey.cb = 0;
+  itemSourceKey.lpb = NULL;
+
   SBinary sEntryID;
-  Util::hex2bin(collection.remoteId().toStdString().c_str(), 
-		strlen(collection.remoteId().toStdString().c_str()),
-		&sEntryID.cb, &sEntryID.lpb, NULL);
+  EntryIDFromSourceKey(lpStore, folderSourceKey, itemSourceKey, sEntryID);
 
   ULONG ulObjType;
   HRESULT hr = lpStore->OpenEntry(sEntryID.cb, 
@@ -90,17 +95,11 @@ void RetrieveItemsJob::start() {
 
   /* Changed */
   for(int i=0; i < synchronizer.messagesChanged.count(); i++) {
-    QPair<QString, QString> elem = synchronizer.messagesChanged[i];
-
-    QString strEntryID = elem.first;
-    QString strSourceID = elem.second;
-
-    session->syncState.addMapping(collection.remoteId(), 
-                                  strEntryID, strSourceID);
+    QString strSourceKey = synchronizer.messagesChanged[i];
 
     Akonadi::Item item;
     item.setParentCollection(collection);
-    item.setRemoteId(strEntryID);
+    item.setRemoteId(collection.remoteId() + ":" + strSourceKey);
     item.setRemoteRevision(QString::number(1));
 
     items << item;
@@ -108,16 +107,11 @@ void RetrieveItemsJob::start() {
 
   /* Deleted */
   for(int i=0; i < synchronizer.messagesDeleted.count(); i++) {
-    QString strSourceID = synchronizer.messagesDeleted[i];
-    QString strEntryID;
-
-    if(!session->syncState.getMappingBySourceID(collection.remoteId(), strSourceID, strEntryID)) {
-      continue;
-    }
+    QString strSourceKey = synchronizer.messagesDeleted[i];
 
     Akonadi::Item item;
     item.setParentCollection(collection);
-    item.setRemoteId(strEntryID);
+    item.setRemoteId(collection.remoteId() + ":" + strSourceKey);
     item.setRemoteRevision(QString::number(1));
 
     deletedItems << item;

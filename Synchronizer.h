@@ -42,18 +42,13 @@ class Synchronizer  : public IExchangeImportContentsChanges {
     return hrSuccess;
   }  
       
-  HRESULT ImportMessageChange(ULONG cValue, LPSPropValue lpPropArray, ULONG ulFlags, LPMESSAGE * lppMessage) {
-    LPSPropValue lpPropValE = PpropFindProp(lpPropArray, cValue, PR_ENTRYID);
-    char* strEntryID = NULL;
-    Util::bin2hex(lpPropValE->Value.bin.cb, lpPropValE->Value.bin.lpb, 
-                  &strEntryID, NULL);
-    
-    LPSPropValue lpPropValS = PpropFindProp(lpPropArray, cValue, PR_SOURCE_KEY);
+  HRESULT ImportMessageChange(ULONG cValue, LPSPropValue lpPropArray, ULONG ulFlags, LPMESSAGE * lppMessage) {    
+    LPSPropValue lpPropValS = PpropFindProp(lpPropArray, cValue, 
+                                            PR_SOURCE_KEY);
     char* strSourceID = NULL;
     Util::bin2hex(lpPropValS->Value.bin.cb, lpPropValS->Value.bin.lpb, 
                   &strSourceID, NULL);
-
-    messagesChanged.push_back(QPair<QString, QString>(QString(strEntryID), QString(strSourceID)));
+    messagesChanged.push_back(QString(strSourceID));
        
     return hrSuccess;
   }
@@ -82,7 +77,7 @@ class Synchronizer  : public IExchangeImportContentsChanges {
     return hrSuccess;
   }
 
-  QList<QPair<QString, QString> > messagesChanged;
+  QList<QString> messagesChanged;
   QList<QString> messagesDeleted;
   QList<QPair<QString, bool> > readStateChanged;
 

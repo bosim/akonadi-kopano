@@ -73,12 +73,11 @@ void RetrieveCollectionsJob::start() {
     return;
   }
 
-  enum { EID, NAME, SUBFOLDERS, CONTAINERCLASS, 
-         PARENT_EID, NUM_COLS };
+  enum { SKEY, PARENT_SKEY, NAME, CONTAINERCLASS, NUM_COLS };
 
   SizedSPropTagArray(NUM_COLS, spt) = { 
-    NUM_COLS, {PR_ENTRYID, PR_DISPLAY_NAME_W, PR_SUBFOLDERS, 
-               PR_CONTAINER_CLASS_A, PR_PARENT_ENTRYID} 
+    NUM_COLS, {PR_SOURCE_KEY, PR_PARENT_SOURCE_KEY, PR_DISPLAY_NAME_W, 
+               PR_CONTAINER_CLASS_A} 
   };
 
   hr = lpTable->SetColumns((LPSPropTagArray) &spt, 0);
@@ -138,24 +137,20 @@ void RetrieveCollectionsJob::start() {
 
       wcstombs(folderName, lpProps[NAME].Value.lpszW, 255);
 
-      char* strEntryID;
-      Util::bin2hex(lpProps[EID].Value.bin.cb, 
-		    lpProps[EID].Value.bin.lpb, 
-		    &strEntryID, NULL);
+      QString strSourceKey;
+      Bin2Hex(lpProps[SKEY].Value.bin, strSourceKey);
 
       Akonadi::Collection collection;
       collection.setName(folderName);
-      collection.setRemoteId(strEntryID);
+      collection.setRemoteId(strSourceKey);
       collection.setContentMimeTypes(contentTypes);
       collection.setParentCollection(root);
 
-      char* strParentEntryID;
-      Util::bin2hex(lpProps[PARENT_EID].Value.bin.cb, 
-                    lpProps[PARENT_EID].Value.bin.lpb, 
-                    &strParentEntryID, NULL);  
+      QString strParentSourceKey;
+      Bin2Hex(lpProps[PARENT_SKEY].Value.bin, strParentSourceKey);
       
       for(int j=0; j < collections.count(); j++) {
-        if(collections[j].remoteId() == strParentEntryID) {
+        if(collections[j].remoteId() == strParentSourceKey) {
           collection.setParentCollection(collections[j]);
           break;
         }
@@ -164,8 +159,8 @@ void RetrieveCollectionsJob::start() {
       collections.append(collection);
 
       kDebug() << "Got " << folderName;
-      kDebug() << "EntryID " << strEntryID;
-      kDebug() << "Parent EntryID " << strParentEntryID;
+      kDebug() << "EntryID " << strSourceKey;
+      kDebug() << "Parent EntryID " << strParentSourceKey;
 
     }
   }

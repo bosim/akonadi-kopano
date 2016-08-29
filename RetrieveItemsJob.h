@@ -28,6 +28,7 @@
 #include <kopano/Util.h>
 
 #include "MapiSession.h"
+#include "Utils.h"
 
 const int MAX_ROWS=1024;
 

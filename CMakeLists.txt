@@ -68,6 +68,7 @@ set(kopanoresource_SRCS
   RetrieveItemsJob.cpp
   SendItemJob.cpp
   SettingsDialog.cpp
+  Utils.cpp
 )
 
 install( FILES kopanoresource.desktop DESTINATION "${CMAKE_INSTALL_PREFIX}/share/akonadi/agents" )
