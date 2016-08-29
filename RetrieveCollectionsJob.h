@@ -32,26 +32,6 @@
 
 #include "MapiSession.h"
 
-class RetrieveCollectionsSubJob : public KJob {
-  Q_OBJECT
-
-  public:
-    RetrieveCollectionsSubJob(SBinary& sEntryID, Akonadi::Collection& parent, Session* session); 
-    ~RetrieveCollectionsSubJob();
-    void start();
-
-    SBinary sEntryID;
-    Akonadi::Collection parent;
-    Akonadi::Collection::List collections;
- protected Q_SLOTS:
-    void jobResult(KJob*);
- private:
-    Session* session;
-    IMAPIFolder *lpFolder;	
-    IMAPITable *lpTable;
-    LPSRowSet lpRowSet;
-};
-
 class RetrieveCollectionsJob : public KJob {
   Q_OBJECT
 
@@ -61,9 +41,12 @@ class RetrieveCollectionsJob : public KJob {
     void start();
     
     Akonadi::Collection::List collections;
- protected Q_SLOTS:
-    void subJobResult(KJob*);
  private:
     Session* session;
     QString name;
+    IMAPIFolder *lpFolder;	
+    IMAPITable *lpTable;
+    LPSSortOrderSet lpSortCriteria;
+    LPSRowSet lpRowSet;
+
 };

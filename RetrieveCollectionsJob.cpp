@@ -1,37 +1,63 @@
 #include "RetrieveCollectionsJob.h"
 
 
-RetrieveCollectionsSubJob::RetrieveCollectionsSubJob(SBinary& sEntryID, Akonadi::Collection& parent, Session* session) : sEntryID(sEntryID), parent(parent), collections(), session(session) {
+RetrieveCollectionsJob::RetrieveCollectionsJob(QString name, Session* session) : name(name), session(session) {
   lpFolder = NULL;
   lpTable = NULL;
+  lpSortCriteria = NULL;
   lpRowSet = NULL;
 }
 
-RetrieveCollectionsSubJob::~RetrieveCollectionsSubJob() {
-  if (lpRowSet)
+RetrieveCollectionsJob::~RetrieveCollectionsJob() {
+  if(lpRowSet) {
     FreeProws(lpRowSet);
-  
-  if (lpTable)
-    lpTable->Release();
+  }
 
-  if (lpFolder)
+  if(lpSortCriteria) {
+    MAPIFreeBuffer(lpSortCriteria);
+  }
+
+  if(lpTable) {
+    lpTable->Release();
+  }
+
+  if(lpFolder) {
     lpFolder->Release();
+  }
 }
 
-void RetrieveCollectionsSubJob::start() {
-  IMAPISession *lpSession = session->getLpSession();  
+void RetrieveCollectionsJob::start() {
+  session->init();
 
-  enum { EID, NAME, SUBFOLDERS, CONTAINERCLASS, PARENT_EID, NUM_COLS };
-  SizedSPropTagArray(NUM_COLS, spt) = { NUM_COLS, {PR_ENTRYID, PR_DISPLAY_NAME_W, PR_SUBFOLDERS, PR_CONTAINER_CLASS_A, PR_PARENT_ENTRYID } };
-  char* strEntryID, *strParentEntryID;
-  char folderName[255];
+  IMAPISession *lpSession = session->getLpSession();  
+  LPMDB lpStore = session->getLpStore();  
+
+  kDebug() << "Fetch collections";
+
+  LPSPropValue lpPropVal = NULL;
+  HRESULT hr = HrGetOneProp(lpStore, PR_IPM_SUBTREE_ENTRYID, &lpPropVal);
+  if (hr != hrSuccess) {
+    setError((int) hr);
+    emitResult();
+    return;
+  }
 
   QStringList contentTypes;
   contentTypes << KMime::Message::mimeType() 
-	       << Akonadi::Collection::mimeType();
+               << Akonadi::Collection::mimeType();
 
+  Akonadi::Collection root;
+
+  root.setName(name);
+  root.setRemoteId("/");
+  root.setContentMimeTypes(contentTypes);
+  root.setParentCollection(Akonadi::Collection::root());
+
+  collections.append(root);
+
+  SBinary sEntryID = lpPropVal->Value.bin;
   ULONG ulObjType;
-  HRESULT hr = lpSession->OpenEntry(sEntryID.cb, (LPENTRYID) sEntryID.lpb, 
+  hr = lpSession->OpenEntry(sEntryID.cb, (LPENTRYID) sEntryID.lpb, 
                             &IID_IMAPIFolder, 0, &ulObjType, 
                             (LPUNKNOWN *) &lpFolder);
   if (hr != hrSuccess) {
@@ -47,6 +73,14 @@ void RetrieveCollectionsSubJob::start() {
     return;
   }
 
+  enum { EID, NAME, SUBFOLDERS, CONTAINERCLASS, 
+         PARENT_EID, NUM_COLS };
+
+  SizedSPropTagArray(NUM_COLS, spt) = { 
+    NUM_COLS, {PR_ENTRYID, PR_DISPLAY_NAME_W, PR_SUBFOLDERS, 
+               PR_CONTAINER_CLASS_A, PR_PARENT_ENTRYID} 
+  };
+
   hr = lpTable->SetColumns((LPSPropTagArray) &spt, 0);
   if (hr != hrSuccess) {
     setError((int) hr);
@@ -55,7 +89,6 @@ void RetrieveCollectionsSubJob::start() {
   }
 
   // Set sort criteria
-  LPSSortOrderSet lpSortCriteria = NULL;
   hr = MAPIAllocateBuffer(CbNewSSortOrderSet(1), (void**)&lpSortCriteria);
   if (hr != hrSuccess) {
     setError((int) hr);
@@ -90,7 +123,6 @@ void RetrieveCollectionsSubJob::start() {
   }
 	
   for (ULONG i = 0; i < lpRowSet->cRows; ++i) {
-    Akonadi::Collection collection;
     LPSPropValue lpProps = lpRowSet->aRow[i].lpProps;
 
     if (PROP_TYPE(lpProps[CONTAINERCLASS].ulPropTag) == PT_STRING8 &&
@@ -102,19 +134,22 @@ void RetrieveCollectionsSubJob::start() {
 
 
     if (PROP_TYPE(lpProps[NAME].ulPropTag) == PT_UNICODE) {
+      char folderName[255];
+
       wcstombs(folderName, lpProps[NAME].Value.lpszW, 255);
+
+      char* strEntryID;
       Util::bin2hex(lpProps[EID].Value.bin.cb, 
 		    lpProps[EID].Value.bin.lpb, 
 		    &strEntryID, NULL);
 
-      kDebug() << "Got " << folderName;
-      kDebug() << "EntryID " << strEntryID;
-
+      Akonadi::Collection collection;
       collection.setName(folderName);
       collection.setRemoteId(strEntryID);
       collection.setContentMimeTypes(contentTypes);
-      collection.setParentCollection(parent);
+      collection.setParentCollection(root);
 
+      char* strParentEntryID;
       Util::bin2hex(lpProps[PARENT_EID].Value.bin.cb, 
                     lpProps[PARENT_EID].Value.bin.lpb, 
                     &strParentEntryID, NULL);  
@@ -127,80 +162,15 @@ void RetrieveCollectionsSubJob::start() {
       }
 
       collections.append(collection);
+
+      kDebug() << "Got " << folderName;
+      kDebug() << "EntryID " << strEntryID;
+      kDebug() << "Parent EntryID " << strParentEntryID;
+
     }
   }
 
   emitResult();
 }
 
-void RetrieveCollectionsSubJob::jobResult(KJob* job) {
-  RetrieveCollectionsSubJob* req = qobject_cast<RetrieveCollectionsSubJob*>(job);
-  
-  if(req->error()) {
-    setError((int) req->error());
-  }
-  
-  for(int i=0; i < req->collections.size(); i++) {
-    collections.append(req->collections[i]);
-  }
-}
 
-/* Retrieve collections job */
-
-RetrieveCollectionsJob::RetrieveCollectionsJob(QString name, Session* session) : name(name), session(session) {
-  
-}
-
-RetrieveCollectionsJob::~RetrieveCollectionsJob() {
-}
-
-void RetrieveCollectionsJob::start() {
-  session->init();
-
-  LPMDB lpStore = session->getLpStore();  
-
-  QStringList contentTypes;
-  contentTypes << KMime::Message::mimeType() 
-               << Akonadi::Collection::mimeType();
-
-
-  kDebug() << "Fetch collections";
-
-  LPSPropValue lpPropVal = NULL;
-  HRESULT hr = HrGetOneProp(lpStore, PR_IPM_SUBTREE_ENTRYID, &lpPropVal);
-  if (hr != hrSuccess) {
-    setError((int) hr);
-    emitResult();
-    return;
-  }
-
-  SBinary sEntryID = lpPropVal->Value.bin;
-
-  Akonadi::Collection root;
-  root.setName(name);
-  root.setRemoteId("/");
-  root.setContentMimeTypes(contentTypes);
-  root.setParentCollection(Akonadi::Collection::root());
-  collections.append(root);
-
-  RetrieveCollectionsSubJob* job = new RetrieveCollectionsSubJob(sEntryID, root, session);
-  connect(job, SIGNAL(result(KJob*)),
-          this, SLOT(subJobResult(KJob*)));
-  job->start();
-}
-
-void RetrieveCollectionsJob::subJobResult(KJob* job) {
-  RetrieveCollectionsSubJob* req = qobject_cast<RetrieveCollectionsSubJob*>(job);
-
-  if(req->error()) {
-    setError(req->error());
-    emitResult();
-    return;
-  }
-  
-  for(int i=0; i < req->collections.size(); i++) {
-    collections.append(req->collections[i]);
-  }  
-  
-  emitResult();
-}

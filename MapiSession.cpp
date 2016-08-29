@@ -95,7 +95,7 @@ int Session::init()
 		       username.toStdWString().c_str(), 
 		       password.toStdWString().c_str(), 
 		       server.toStdString().c_str(),
-                       EC_PROFILE_FLAGS_NO_NOTIFICATIONS,
+                       0,
                        NULL, NULL);
   if (hr != hrSuccess) {
     return -1;

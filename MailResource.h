@@ -23,7 +23,6 @@
 #include <Akonadi/ResourceBase>
 #include <Akonadi/TransportResourceBase>
 #include <Akonadi/ItemCreateJob>
-#include <QTimer>
 #include <KMime/Message>
 
 #include "ItemAddedJob.h"
