@@ -23,13 +23,9 @@ void ItemsFlagsChangedJob::start() {
     QString collectionSourceKey = splitArr[0];
     QString itemSourceKey = splitArr[1];
 
-    SBinary sFolderSourceKey; 
-    Hex2Bin(collectionSourceKey, sFolderSourceKey);
-    SBinary sItemSourceKey; 
-    Hex2Bin(itemSourceKey, sItemSourceKey); 
     SBinary sEntryID;
-    EntryIDFromSourceKey(lpStore, sFolderSourceKey, 
-                         sItemSourceKey, sEntryID);
+    EntryIDFromSourceKey(lpStore, collectionSourceKey, 
+                         itemSourceKey, sEntryID);
 
     ULONG ulObjType;
     HRESULT hr = lpStore->OpenEntry(sEntryID.cb, 

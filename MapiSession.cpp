@@ -85,7 +85,7 @@ Session::~Session() {
 
 int Session::init()
 {
-  if(lpSession) {
+  if(lpSession && lpStore && lpAddrBook) {
     return 0;
   }
 

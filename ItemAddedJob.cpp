@@ -86,7 +86,7 @@ void ItemAddedJob::start() {
   QString strEntryID;
   Bin2Hex(lpPropVal->Value.bin, strEntryID);
 
-  item.setRemoteId(strEntryID);
+  item.setRemoteId(collection.remoteId() + ":" + strEntryID);
   item.setRemoteRevision(QString::number(1));
   item.setParentCollection(collection);
 

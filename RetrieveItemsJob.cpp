@@ -26,22 +26,15 @@ void RetrieveItemsJob::start() {
 
   LPMDB lpStore = session->getLpStore();
 
-  if(collection.remoteId() == "/") {
+  if(collection.parentCollection() == Akonadi::Collection::root()) {
     emitResult();
     return;
   }
 
   kDebug() << "Collection " <<collection.remoteId();
 
-  SBinary folderSourceKey;
-  Hex2Bin(collection.remoteId(), folderSourceKey);
-
-  SBinary itemSourceKey;
-  itemSourceKey.cb = 0;
-  itemSourceKey.lpb = NULL;
-
   SBinary sEntryID;
-  EntryIDFromSourceKey(lpStore, folderSourceKey, itemSourceKey, sEntryID);
+  EntryIDFromSourceKey(lpStore, collection.remoteId(), sEntryID);
 
   ULONG ulObjType;
   HRESULT hr = lpStore->OpenEntry(sEntryID.cb, 

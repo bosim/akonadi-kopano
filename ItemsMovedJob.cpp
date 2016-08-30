@@ -20,19 +20,16 @@ void ItemsMovedJob::start() {
   LPMDB lpStore = session->getLpStore();
 
   SBinary sEntryID;
-  std::string remoteId = sourceCollection.remoteId().toStdString();
+  QString remoteIdSrc = sourceCollection.remoteId();
 
-  HRESULT hr = Util::hex2bin(remoteId.c_str(), 
-			     strlen(remoteId.c_str()),
-			     &sEntryID.cb, &sEntryID.lpb, NULL);
-
+  HRESULT hr = EntryIDFromSourceKey(lpStore, remoteIdSrc, sEntryID);
   if(hr != hrSuccess) {
     setError((int) hr);
     emitResult();
     return;
   }
 
-  kDebug() << "Source " << remoteId.c_str();
+  kDebug() << "Source " << remoteIdSrc;
 
   ULONG ulObjType;
   hr = lpStore->OpenEntry(sEntryID.cb, 
@@ -46,13 +43,11 @@ void ItemsMovedJob::start() {
     return;
   }
 
-  remoteId = destinationCollection.remoteId().toStdString();
+  QString remoteIdDst = destinationCollection.remoteId();
 
-  kDebug() << "Destination " << remoteId.c_str();
+  kDebug() << "Destination " << remoteIdDst;
 
-  hr = Util::hex2bin(remoteId.c_str(), strlen(remoteId.c_str()),
-		     &sEntryID.cb, &sEntryID.lpb, NULL);
-
+  hr = EntryIDFromSourceKey(lpStore, remoteIdDst, sEntryID);
   if(hr != hrSuccess) {
     setError((int) hr);
     emitResult();
@@ -86,12 +81,12 @@ void ItemsMovedJob::start() {
   }
 
   for(int i=0; i < items.count(); i++) {
-    remoteId = items[i].remoteId().toStdString();
+    QStringList splitArr = items[i].remoteId().split(":");
+    QString itemSourceKey = splitArr[1];
 
-    kDebug() << "Item " << remoteId.c_str();
+    kDebug() << "Item " << itemSourceKey;
 
-    hr = Util::hex2bin(remoteId.c_str(), strlen(remoteId.c_str()),
-		       &sEntryID.cb, &sEntryID.lpb, NULL);
+    EntryIDFromSourceKey(lpStore, remoteIdSrc, itemSourceKey, sEntryID);
     
     sEntryList.lpbin[i].cb = sEntryID.cb; 
     sEntryList.lpbin[i].lpb = sEntryID.lpb;

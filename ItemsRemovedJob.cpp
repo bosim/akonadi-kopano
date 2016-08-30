@@ -39,9 +39,7 @@ void ItemsRemovedJob::start() {
     ba.lpbin = new SBinary[count];
 
     SBinary sEntryID;
-    Util::hex2bin(key.toStdString().c_str(), 
-                  strlen(key.toStdString().c_str()),
-                  &sEntryID.cb, &sEntryID.lpb, NULL);
+    EntryIDFromSourceKey(lpStore, key, sEntryID);
 
     ULONG ulObjType;
     HRESULT hr = lpStore->OpenEntry(sEntryID.cb, 
@@ -57,11 +55,11 @@ void ItemsRemovedJob::start() {
 
     for(int j=0; j < count; j++) {
       Akonadi::Item item = folders[key][j];
-      std::string remoteId = item.remoteId().toStdString();
+
+      QStringList splitArr = item.remoteId().split(":");
+      QString itemSourceKey = splitArr[1];
           
-      hr = Util::hex2bin(remoteId.c_str(), 
-                         strlen(remoteId.c_str()),
-                         &sEntryID.cb, &sEntryID.lpb, NULL);
+      EntryIDFromSourceKey(lpStore, key, itemSourceKey, sEntryID);
 
       ba.lpbin[j] = sEntryID;
     }
