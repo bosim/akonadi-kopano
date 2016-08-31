@@ -49,6 +49,6 @@ class RetrieveItemsJob : public KJob {
 
     /* Locals */
     IMAPIFolder *lpFolder;	
-    IMAPITable *lpTable;
-    LPSRowSet lpRowSet;
+    IExchangeExportChanges *lpIEEC;
+    LPSTREAM lpStream;
 };

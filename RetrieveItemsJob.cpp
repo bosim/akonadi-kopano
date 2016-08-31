@@ -4,19 +4,19 @@
 RetrieveItemsJob::RetrieveItemsJob(Akonadi::Collection const& collection, Session* session) : fullSync(false), collection(collection), session(session) {
 
   lpFolder = NULL;
-  lpTable = NULL;
-  lpRowSet = NULL;
+  lpIEEC = NULL;
+  lpStream = NULL;
 }
 
 RetrieveItemsJob::~RetrieveItemsJob() {
+  /*if(lpIEEC) {
+    lpIEEC->Release();
+    }*/
+  if(lpStream) {
+    lpStream->Release();
+  }
   if(lpFolder) {
     lpFolder->Release();
-  }
-  if(lpTable) {
-    lpTable->Release();
-  }
-  if(lpRowSet) {
-    FreeProws(lpRowSet);    
   }
 }
 
@@ -31,7 +31,7 @@ void RetrieveItemsJob::start() {
     return;
   }
 
-  kDebug() << "Collection " <<collection.remoteId();
+  kDebug() << "Collection " << collection.remoteId();
 
   SBinary sEntryID;
   QString cacheEntryID;
@@ -51,19 +51,23 @@ void RetrieveItemsJob::start() {
     return;
   }
 
-  LPSTREAM lpStream = NULL;
   ULONG tmp[2] = { 0, 0 };
   hr = CreateStreamOnHGlobal(GlobalAlloc(GPTR, sizeof(tmp)), 
                              true, &lpStream);
+  if (hr != hrSuccess) {
+    setError((int) hr);
+    emitResult();
+    return;
+  }
   
-  IExchangeExportChanges *lpIEEC = NULL;
   hr = lpFolder->OpenProperty(PR_CONTENTS_SYNCHRONIZER, 
                              &IID_IExchangeExportChanges, 0, 0, 
                              (LPUNKNOWN *)&lpIEEC);
-
   if (hr != hrSuccess) {
+    setError((int) hr);
+    emitResult();
+    return;
   }
-
 
   bool synced = session->syncState.loadState(collection.remoteId(), tmp);
   if(!synced) {
@@ -77,16 +81,22 @@ void RetrieveItemsJob::start() {
   hr = lpIEEC->Config(lpStream, SYNC_NORMAL | SYNC_READ_STATE, 
                       &synchronizer, NULL, NULL, NULL, 0);
   if (hr != hrSuccess) {
+    setError((int) hr);
+    emitResult();
+    return;
   }
 
   ULONG ulSteps = 0;
   ULONG ulProgress = 0;
   do {
     hr = lpIEEC->Synchronize(&ulSteps, &ulProgress);
-    if(hr != hrSuccess) {
-
-    }
   } while(hr == SYNC_W_PROGRESS);
+
+  if (hr != hrSuccess) {
+    setError((int) hr);
+    emitResult();
+    return;
+  }
 
   /* Changed */
   for(int i=0; i < synchronizer.messagesChanged.count(); i++) {
