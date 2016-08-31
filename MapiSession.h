@@ -41,6 +41,7 @@
 #include "inetmapi/inetmapi.h"
 
 #include "SynchronizerState.h"
+#include "Utils.h"
 
 class Session : public QObject
 {
@@ -68,10 +69,8 @@ class Session : public QObject
       return lpLogger;
     }
 
-    bool abortFetching() {
-      return  true;
-    }
-
+    HRESULT EntryIDFromSourceKey(QString const& folderSource, SBinary& entryID);
+    HRESULT EntryIDFromSourceKey(QString const& folderSource, QString const& itemSource, SBinary& entryID);
 
     sending_options sopt;
     delivery_options dopt;
@@ -102,6 +101,7 @@ class Session : public QObject
     LPMDB lpStore;
     ECLogger* lpLogger;
 
+    QMap<QString, QString> mappingCache;
 };
 
 #endif

@@ -28,7 +28,6 @@
 
 #include <KDebug>
 
-#include "RetrieveItemsJob.h"
 
 //--------------------------------------------------------------------------------
 
@@ -117,6 +116,55 @@ int Session::init()
 }
 
 
+HRESULT Session::EntryIDFromSourceKey(QString const& folderSource, SBinary& entryID) {
+  HRESULT hr = hrSuccess;
+
+  if(mappingCache.contains(folderSource)) {
+    kDebug() << "Cache!";
+    Hex2Bin(mappingCache[folderSource], entryID);
+  } else {
+    SBinary folderSourceKey;
+    Hex2Bin(folderSource, folderSourceKey);
+
+    SBinary itemSourceKey;
+    itemSourceKey.cb = 0;
+    itemSourceKey.lpb = NULL;
+
+    hr = RawEntryIDFromSourceKey(lpStore, folderSourceKey, 
+                                 itemSourceKey, entryID);
+
+    QString strEntryID;
+    Bin2Hex(entryID, strEntryID);
+    mappingCache[folderSource] = strEntryID;
+  }
+
+  return hr;
+}
+
+HRESULT Session::EntryIDFromSourceKey(QString const& folderSource, QString const& itemSource, SBinary& entryID) {
+  HRESULT hr = hrSuccess;
+
+  QString realItemSource = folderSource + ":" + itemSource;
+
+  if(mappingCache.contains(realItemSource)) {
+    kDebug() << "Cache!";
+    Hex2Bin(mappingCache[realItemSource], entryID);
+  } else {
+    SBinary folderSourceKey;
+    Hex2Bin(folderSource, folderSourceKey);
+
+    SBinary itemSourceKey;
+    Hex2Bin(itemSource, itemSourceKey);
+
+    hr = RawEntryIDFromSourceKey(lpStore, folderSourceKey, itemSourceKey, entryID);
+    
+    QString strEntryID;
+    Bin2Hex(entryID, strEntryID);
+    mappingCache[realItemSource] = strEntryID;
+  }
+
+  return hr;
+}
 
 
 //--------------------------------------------------------------------------------

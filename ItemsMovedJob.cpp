@@ -22,7 +22,7 @@ void ItemsMovedJob::start() {
   SBinary sEntryID;
   QString remoteIdSrc = sourceCollection.remoteId();
 
-  HRESULT hr = EntryIDFromSourceKey(lpStore, remoteIdSrc, sEntryID);
+  HRESULT hr = session->EntryIDFromSourceKey(remoteIdSrc, sEntryID);
   if(hr != hrSuccess) {
     setError((int) hr);
     emitResult();
@@ -47,7 +47,7 @@ void ItemsMovedJob::start() {
 
   kDebug() << "Destination " << remoteIdDst;
 
-  hr = EntryIDFromSourceKey(lpStore, remoteIdDst, sEntryID);
+  hr = session->EntryIDFromSourceKey(remoteIdDst, sEntryID);
   if(hr != hrSuccess) {
     setError((int) hr);
     emitResult();
@@ -56,7 +56,7 @@ void ItemsMovedJob::start() {
 
   hr = lpStore->OpenEntry( sEntryID.cb, 
 			  (LPENTRYID) sEntryID.lpb, 
-			  &IID_IMAPIFolder, 0, &ulObjType, 
+			  &IID_IMAPIFolder, MAPI_MODIFY, &ulObjType, 
 			  (LPUNKNOWN *)&lpDstFolder);
 
   if(hr != hrSuccess) {
@@ -67,46 +67,89 @@ void ItemsMovedJob::start() {
 
   kDebug() << "Items count " << items.count();
 
-  ENTRYLIST sEntryList;
-
-  sEntryList.cValues = items.count();
-
-  hr = MAPIAllocateBuffer(sizeof(SBinary) * items.count(), 
-			  (LPVOID *) &sEntryList.lpbin);
-
-  if(hr != hrSuccess) {
-    setError((int) hr);
-    emitResult();
-    return;
-  }
+  SBinaryArray ba = {0, NULL};
+  ba.cValues = items.count();
+  ba.lpbin = new SBinary[items.count()];
 
   for(int i=0; i < items.count(); i++) {
     QStringList splitArr = items[i].remoteId().split(":");
     QString itemSourceKey = splitArr[1];
+    
+    LPMESSAGE lpSrcMessage = NULL;
+    LPMESSAGE lpDstMessage = NULL;
 
     kDebug() << "Item " << itemSourceKey;
 
-    EntryIDFromSourceKey(lpStore, remoteIdSrc, itemSourceKey, sEntryID);
-    
-    sEntryList.lpbin[i].cb = sEntryID.cb; 
-    sEntryList.lpbin[i].lpb = sEntryID.lpb;
+    session->EntryIDFromSourceKey(remoteIdSrc, itemSourceKey, sEntryID);
+
+    hr = lpStore->OpenEntry(sEntryID.cb, (LPENTRYID) sEntryID.lpb, 
+                       &IID_IMessage, 0, &ulObjType, 
+                       (LPUNKNOWN*)&lpSrcMessage);
 
     if(hr != hrSuccess) {
+      kDebug() << "OpenEntry failed";
       setError((int) hr);
       emitResult();
       return;
     }
+
+    hr = lpDstFolder->CreateMessage(NULL, 0, 
+                                    &lpDstMessage);
+
+    if(hr != hrSuccess) {
+      kDebug() << "CreateMessage failed";
+      setError((int) hr);
+      emitResult();
+      return;
+    }
+
+    hr = lpSrcMessage->CopyTo(0, NULL, NULL, 0, NULL, &IID_IMessage,
+                              (LPVOID) lpDstMessage, 0, NULL);
+
+    if(hr != hrSuccess) {
+      kDebug() << "CopyTo failed";
+      setError((int) hr);
+      emitResult();
+      return;
+    }
+    
+    hr = lpDstMessage->SaveChanges(0);
+
+    if(hr != hrSuccess) {
+      kDebug() << "SaveChanges failed";
+      setError((int) hr);
+      emitResult();
+      return;
+    }
+
+    ba.lpbin[i] = sEntryID;
+
+    lpSrcMessage->Release();
+    lpSrcMessage = NULL;
+    
+    LPSPropValue lpPropVal = NULL;
+    hr = HrGetOneProp(lpDstMessage, PR_SOURCE_KEY, &lpPropVal);
+    if (hr != hrSuccess) {
+      kDebug() << "GetOneProp failed";
+      setError((int) hr);
+      emitResult(); 
+      return;
+    }
+
+    QString strSourceKey;
+    Bin2Hex(lpPropVal->Value.bin, strSourceKey);
+    
+    kDebug() << "New source key " << strSourceKey;
+
+    items[i].setRemoteId(remoteIdDst + ":" + strSourceKey);
+    items[i].setRemoteRevision(QString::number(1));
+    items[i].setParentCollection(destinationCollection);
+
+    lpDstMessage->Release();
+    lpDstMessage = NULL;
   }
 
-  kDebug() << "Moving messages";
-
-  hr = lpSrcFolder->CopyMessages(&sEntryList, NULL, lpDstFolder,
-				 0, NULL, MESSAGE_MOVE);  
-  if(hr != hrSuccess) {
-    setError((int) hr);
-    emitResult();
-    return;
-  }
+  lpSrcFolder->DeleteMessages(&ba, 0, NULL, 0);
 
   kDebug() << "Emitting result";
 

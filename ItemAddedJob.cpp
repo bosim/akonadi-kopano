@@ -24,15 +24,14 @@ void ItemAddedJob::start() {
   delivery_options* dopt = &session->dopt;
 
   SBinary sEntryID;
-  Util::hex2bin(collection.remoteId().toStdString().c_str(), 
-		strlen(collection.remoteId().toStdString().c_str()),
-		&sEntryID.cb, &sEntryID.lpb, NULL);
+  session->EntryIDFromSourceKey(collection.remoteId(), sEntryID);
 
   ULONG ulObjType;
   HRESULT hr = lpStore->OpenEntry(sEntryID.cb, (LPENTRYID) sEntryID.lpb, 
                                   NULL, MAPI_MODIFY, &ulObjType, 
                                   (LPUNKNOWN *) &lpFolder);
   if (hr != hrSuccess) {
+    kDebug() << "OpenEntry failed";
     setError((int) hr);
     emitResult(); 
     return;
@@ -57,6 +56,7 @@ void ItemAddedJob::start() {
   hr = IMToMAPI(lpSession, lpStore, lpAddrBook, lpMessage, 
                 bodyText.constData(), *dopt, lpLogger);
   if (hr != hrSuccess) {
+    kDebug() << "IMToMAPI failed";
     setError((int) hr);
     emitResult(); 
     return;
@@ -78,6 +78,7 @@ void ItemAddedJob::start() {
   LPSPropValue lpPropVal = NULL;
   hr = HrGetOneProp(lpMessage, PR_SOURCE_KEY, &lpPropVal);
   if (hr != hrSuccess) {
+    kDebug() << "GetOneProp failed";
     setError((int) hr);
     emitResult(); 
     return;

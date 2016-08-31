@@ -34,12 +34,14 @@ void RetrieveItemsJob::start() {
   kDebug() << "Collection " <<collection.remoteId();
 
   SBinary sEntryID;
-  EntryIDFromSourceKey(lpStore, collection.remoteId(), sEntryID);
+  QString cacheEntryID;
+
+  session->EntryIDFromSourceKey(collection.remoteId(), sEntryID);
 
   ULONG ulObjType;
   HRESULT hr = lpStore->OpenEntry(sEntryID.cb, 
 				  (LPENTRYID) sEntryID.lpb, 
-				  &IID_IMAPIFolder, 0, 
+				  &IID_IMAPIFolder, MAPI_BEST_ACCESS, 
                                   &ulObjType, 
 				  (LPUNKNOWN *)&lpFolder);
 

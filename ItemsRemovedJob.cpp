@@ -39,7 +39,7 @@ void ItemsRemovedJob::start() {
     ba.lpbin = new SBinary[count];
 
     SBinary sEntryID;
-    EntryIDFromSourceKey(lpStore, key, sEntryID);
+    session->EntryIDFromSourceKey(key, sEntryID);
 
     ULONG ulObjType;
     HRESULT hr = lpStore->OpenEntry(sEntryID.cb, 
@@ -59,7 +59,7 @@ void ItemsRemovedJob::start() {
       QStringList splitArr = item.remoteId().split(":");
       QString itemSourceKey = splitArr[1];
           
-      EntryIDFromSourceKey(lpStore, key, itemSourceKey, sEntryID);
+      session->EntryIDFromSourceKey(key, itemSourceKey, sEntryID);
 
       ba.lpbin[j] = sEntryID;
     }

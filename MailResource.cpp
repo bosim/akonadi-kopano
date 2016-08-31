@@ -257,29 +257,6 @@ void MailResource::itemsFlagsChangedResult(KJob* job) {
 
 //--------------------------------------------------------------------------------
 
-void MailResource::aboutToQuit()
-{
-  if ( status() == Running )
-  {
-    session->abortFetching();
-    cancelTask(i18n("Mail check aborted."));
-  }
-}
-
-//--------------------------------------------------------------------------------
-
-void MailResource::slotAbortRequested()
-{
-  if ( status() == Running )
-  {
-    session->abortFetching();
-    cancelTask(i18n("Mail check was canceled manually."));
-    emit status(Idle, i18n("Ready"));
-  }
-}
-
-//--------------------------------------------------------------------------------
-
 void MailResource::configure(WId windowId)
 {
   QPointer<SettingsDialog> dialog = new SettingsDialog(this, windowId);

@@ -60,14 +60,10 @@ class MailResource : public Akonadi::ResourceBase,
     void itemsRemoved(const Akonadi::Item::List &items);
     void sendItem(const Akonadi::Item &item);
 
-  protected:
-    virtual void aboutToQuit();
-
   private Q_SLOTS:
     void loadConfiguration();
     void errorMessageChanged(const QString &msg);
     void authRequired();
-    void slotAbortRequested();
 
   private:  // methods
     void finish();

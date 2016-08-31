@@ -24,8 +24,8 @@ void ItemsFlagsChangedJob::start() {
     QString itemSourceKey = splitArr[1];
 
     SBinary sEntryID;
-    EntryIDFromSourceKey(lpStore, collectionSourceKey, 
-                         itemSourceKey, sEntryID);
+    session->EntryIDFromSourceKey(collectionSourceKey, 
+                                  itemSourceKey, sEntryID);
 
     ULONG ulObjType;
     HRESULT hr = lpStore->OpenEntry(sEntryID.cb, 
