@@ -28,30 +28,6 @@
 
 #include <KDebug>
 
-
-//--------------------------------------------------------------------------------
-
-int Session::debugArea()
-{
-  static int num = KDebug::registerArea("kopano_resource"); 
-  return num;
-}
-
-//--------------------------------------------------------------------------------
-
-int Session::debugArea2()
-{
-  static int num = KDebug::registerArea("kopano_resource2"); 
-  return num;
-}
-
-//--------------------------------------------------------------------------------
-
-#define PRINT_DEBUG(x) { kDebug(debugArea()) << QDateTime::currentDateTime().toString(Qt::ISODate) << x; }
-#define PRINT_DEBUG2(x) { kDebug(debugArea2()) << QDateTime::currentDateTime().toString(Qt::ISODate) << x; }
-
-//--------------------------------------------------------------------------------
-
 Session::Session(const QString &server, const QString &username, const QString &password)
   : aborted(false), errorOccured(false), server(server), username(username), password(password), lpSession(NULL), lpStore(NULL), lpAddrBook(NULL), lpLogger(NULL)
 {

@@ -64,9 +64,8 @@ class MailResource : public Akonadi::ResourceBase,
     void loadConfiguration();
     void errorMessageChanged(const QString &msg);
     void authRequired();
-
-  private:  // methods
-    void finish();
+    void loadState();
+    void saveState();
 
   protected Q_SLOTS:
     void retrieveCollectionsResult(KJob*);
@@ -83,7 +82,6 @@ class MailResource : public Akonadi::ResourceBase,
     Session *session;
     QMap<KJob *, QByteArray> pendingCreateJobs;
     QList<QByteArray> mailsToDelete;
-    bool downloadFinished;
     QString lastErrorMessage;
 };
 

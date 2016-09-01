@@ -71,12 +71,13 @@ void RetrieveItemsJob::start() {
     return;
   }
 
-  bool synced = session->syncState.loadState(collection.remoteId(), tmp);
+  QByteArray state;
+  bool synced = session->loadCollectionsState(collection.remoteId(), state);
   if(!synced) {
     fullSync = true;
   }
 
-  lpStream->Write(tmp, sizeof(tmp), NULL);
+  lpStream->Write(state.data(), state.size(), NULL);
   lpStream->Commit(0);
 
   Synchronizer synchronizer;
@@ -127,9 +128,12 @@ void RetrieveItemsJob::start() {
   lpIEEC->UpdateState(lpStream);
   lpStream->Commit(0);
 
+  state.clear();
+  state.resize(sizeof(tmp));
+
   ULONG ulRead;
-  hr = lpStream->Read(&tmp, sizeof(tmp), &ulRead);
-  session->syncState.saveState(collection.remoteId(), tmp);
+  hr = lpStream->Read(state.data(), state.size(), &ulRead);
+  session->saveCollectionsState(collection.remoteId(), state);
   
   emitResult();
 

@@ -38,7 +38,7 @@
 //--------------------------------------------------------------------------------
 
 MailResource::MailResource(const QString &id)
-  : ResourceBase(id), session(0), downloadFinished(false) {
+  : ResourceBase(id), session(0) {
   kDebug() << "Constructor";
 
   changeRecorder()->fetchCollection(true);
@@ -58,6 +58,8 @@ MailResource::MailResource(const QString &id)
   setNeedsNetwork(true);
   setHierarchicalRemoteIdentifiersEnabled(true);
 
+  loadState();
+
   kDebug() << "Constructed";
 }
 
@@ -66,8 +68,40 @@ MailResource::MailResource(const QString &id)
 MailResource::~MailResource()
 {
   if(session) {
+    saveState();
+
     delete session;
   }
+}
+
+//--------------------------------------------------------------------------------
+
+void MailResource::loadState() {
+  // Load the sync state
+  QMap<QString, QByteArray> collectionsState;
+  QByteArray data = QByteArray::fromBase64(Settings::self()->syncState().toAscii());
+
+  if (!data.isEmpty()) {
+    data = qUncompress(data);
+
+    if (!data.isEmpty()) {
+      QDataStream stream(data);
+      stream >> collectionsState;
+    }
+  }
+
+  session->setCollectionsState(collectionsState);
+}
+
+void MailResource::saveState() {
+  QByteArray str;
+  QDataStream dataStream(&str, QIODevice::WriteOnly);
+
+  dataStream << session->getCollectionsState();
+
+  Settings::self()->setSyncState(qCompress(str, 9).toBase64());
+  Settings::self()->writeConfig();
+
 }
 
 //--------------------------------------------------------------------------------
@@ -127,6 +161,8 @@ void MailResource::retrieveItemsResult(KJob* job) {
     cancelTask(errorString);
   }
   else {
+    saveState();
+
     kDebug() << "retrieveItemsResult job is done";
     if(req->fullSync)  {
       itemsRetrieved(req->items);

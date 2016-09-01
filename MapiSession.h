@@ -40,7 +40,6 @@
 #include "CommonUtil.h"
 #include "inetmapi/inetmapi.h"
 
-#include "SynchronizerState.h"
 #include "Utils.h"
 
 class Session : public QObject
@@ -69,13 +68,32 @@ class Session : public QObject
       return lpLogger;
     }
 
+    QMap<QString, QByteArray> getCollectionsState() {
+      return collectionsState;
+    }
+
+    void setCollectionsState(QMap<QString, QByteArray> const& state) {
+      collectionsState = state;
+    }
+
+    bool loadCollectionsState(QString sourceKey, QByteArray& result) {
+      if(collectionsState.contains(sourceKey)) {
+        result = collectionsState[sourceKey];
+        return true;
+      }
+
+      return false;
+    }
+
+    void saveCollectionsState(QString sourceKey, QByteArray& result) {
+      collectionsState[sourceKey] = result;
+    }
+
     HRESULT EntryIDFromSourceKey(QString const& folderSource, SBinary& entryID);
     HRESULT EntryIDFromSourceKey(QString const& folderSource, QString const& itemSource, SBinary& entryID);
 
     sending_options sopt;
     delivery_options dopt;
-
-    SynchronizerState syncState;
 
   signals:
     void progress(int);
@@ -102,6 +120,7 @@ class Session : public QObject
     ECLogger* lpLogger;
 
     QMap<QString, QString> mappingCache;
+    QMap<QString, QByteArray> collectionsState;
 };
 
 #endif

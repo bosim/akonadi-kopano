@@ -45,9 +45,6 @@ SettingsDialog::SettingsDialog(MailResource *res, WId parentWindow)
   setWindowTitle(i18n("AirSyncDownload Account Settings"));
   setButtons(Ok|Cancel);
 
-  ui.intervalSpin->setSuffix(ki18np(" minute", " minutes"));
-  ui.intervalSpin->setRange(1, 10000, 1);
-
   loadSettings();
 }
 
@@ -69,10 +66,6 @@ void SettingsDialog::loadSettings()
 
   ui.userNameEdit->setText(Settings::self()->userName().length() ? Settings::self()->userName() :
                            KUser().loginName());
-
-  ui.intervalCheck->setChecked(Settings::self()->intervalCheckEnabled());
-  ui.intervalSpin->setValue(Settings::self()->intervalCheckInterval());
-  ui.intervalSpin->setEnabled(Settings::self()->intervalCheckEnabled());
 
   wallet = Wallet::openWallet(Wallet::NetworkWallet(), winId());
   if ( wallet )
@@ -148,9 +141,6 @@ void SettingsDialog::saveSettings()
 
   Settings::self()->setServer(ui.serverEdit->text().trimmed());
   Settings::self()->setUserName(ui.userNameEdit->text().trimmed());
-
-  Settings::self()->setIntervalCheckEnabled(ui.intervalCheck->isChecked());
-  Settings::self()->setIntervalCheckInterval(ui.intervalSpin->value());
 
   Settings::self()->writeConfig();
 
