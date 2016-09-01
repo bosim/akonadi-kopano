@@ -101,9 +101,6 @@ class Session : public QObject
     void authRequired();
 
   private:
-    static int debugArea();
-    static int debugArea2();
-
     QNetworkAccessManager *nam;
     QEventLoop *eventLoop;
 
