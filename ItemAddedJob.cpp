@@ -15,7 +15,12 @@ ItemAddedJob::~ItemAddedJob() {
 }
 
 void ItemAddedJob::start() {
-  session->init();
+  HRESULT hr = session->init();
+  if(hr != hrSuccess) {
+    setError((int) hr);
+    emitResult();
+    return;    
+  }
 
   IMAPISession* lpSession = session->getLpSession();;
   LPMDB lpStore = session->getLpStore();
@@ -27,9 +32,9 @@ void ItemAddedJob::start() {
   session->EntryIDFromSourceKey(collection.remoteId(), sEntryID);
 
   ULONG ulObjType;
-  HRESULT hr = lpStore->OpenEntry(sEntryID.cb, (LPENTRYID) sEntryID.lpb, 
-                                  NULL, MAPI_MODIFY, &ulObjType, 
-                                  (LPUNKNOWN *) &lpFolder);
+  hr = lpStore->OpenEntry(sEntryID.cb, (LPENTRYID) sEntryID.lpb, 
+                          NULL, MAPI_MODIFY, &ulObjType, 
+                          (LPUNKNOWN *) &lpFolder);
   if (hr != hrSuccess) {
     kDebug() << "OpenEntry failed";
     setError((int) hr);

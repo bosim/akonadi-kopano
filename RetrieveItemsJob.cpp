@@ -21,8 +21,12 @@ RetrieveItemsJob::~RetrieveItemsJob() {
 }
 
 void RetrieveItemsJob::start() {
-
-  session->init();
+  HRESULT hr = session->init();
+  if(hr != hrSuccess) {
+    setError((int) hr);
+    emitResult();
+    return;    
+  }
 
   LPMDB lpStore = session->getLpStore();
 
@@ -39,11 +43,9 @@ void RetrieveItemsJob::start() {
   session->EntryIDFromSourceKey(collection.remoteId(), sEntryID);
 
   ULONG ulObjType;
-  HRESULT hr = lpStore->OpenEntry(sEntryID.cb, 
-				  (LPENTRYID) sEntryID.lpb, 
-				  &IID_IMAPIFolder, MAPI_BEST_ACCESS, 
-                                  &ulObjType, 
-				  (LPUNKNOWN *)&lpFolder);
+  hr = lpStore->OpenEntry(sEntryID.cb, (LPENTRYID) sEntryID.lpb, 
+                          &IID_IMAPIFolder, MAPI_BEST_ACCESS, 
+                          &ulObjType, (LPUNKNOWN *)&lpFolder);
 
   if (hr != hrSuccess) {
     setError((int) hr);

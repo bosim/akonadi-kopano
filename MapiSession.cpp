@@ -85,7 +85,7 @@ Session::~Session() {
 int Session::init()
 {
   if(lpSession && lpStore && lpAddrBook) {
-    return 0;
+    return hrSuccess;
   }
 
   HRESULT hr = S_OK;
@@ -97,22 +97,22 @@ int Session::init()
                        EC_PROFILE_FLAGS_NO_NOTIFICATIONS,
                        NULL, NULL);
   if (hr != hrSuccess) {
-    return -1;
+    return hr;
   }
 	
   // Get the default Store of the profile
   hr = HrOpenDefaultStore(lpSession, &lpStore);
   if (hr != hrSuccess) {
-    return -1;
+    return hr;
   }
   
   hr = lpSession->OpenAddressBook(0, NULL, AB_NO_DIALOG, &lpAddrBook);
   if (hr != hrSuccess) {
     lpLogger->Log(EC_LOGLEVEL_ERROR, "Failed to open addressbook");
-    return -1;
+    return hr;
   }
 
-  return 0;
+  return hr;
 }
 
 

@@ -15,7 +15,12 @@ SendItemJob::~SendItemJob() {
 }
 
 void SendItemJob::start() {
-  session->init();
+  HRESULT hr = session->init();
+  if(hr != hrSuccess) {
+    setError((int) hr);
+    emitResult();
+    return;    
+  }
 
   LPMDB lpStore = session->getLpStore();  
   IMAPISession *lpSession = session->getLpSession();
@@ -27,7 +32,7 @@ void SendItemJob::start() {
   QByteArray bodyText = msg->encodedContent(true);
 
   LPSPropValue lpPropVal = NULL;
-  HRESULT hr = HrGetOneProp(lpStore, PR_IPM_OUTBOX_ENTRYID, &lpPropVal);
+  hr = HrGetOneProp(lpStore, PR_IPM_OUTBOX_ENTRYID, &lpPropVal);
   if (hr != hrSuccess) {
     setError((int) hr);
     emitResult();

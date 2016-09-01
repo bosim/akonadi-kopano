@@ -12,7 +12,12 @@ ItemsFlagsChangedJob::~ItemsFlagsChangedJob() {
 }
 
 void ItemsFlagsChangedJob::start() {
-  session->init();
+  HRESULT hr = session->init();
+  if(hr != hrSuccess) {
+    setError((int) hr);
+    emitResult();
+    return;    
+  }
 
   LPMDB lpStore = session->getLpStore();  
 

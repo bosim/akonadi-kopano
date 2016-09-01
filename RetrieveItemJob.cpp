@@ -12,7 +12,12 @@ RetrieveItemJob::~RetrieveItemJob() {
 }
 
 void RetrieveItemJob::start() {
-  session->init();
+  HRESULT hr = session->init();
+  if(hr != hrSuccess) {
+    setError((int) hr);
+    emitResult();
+    return;    
+  }
 
   LPMDB lpStore = session->getLpStore();
   IMAPISession* lpSession = session->getLpSession();
@@ -31,12 +36,12 @@ void RetrieveItemJob::start() {
                                 itemSourceKey, sEntryID);
 
   ULONG ulObjType;
-  HRESULT hr = lpStore->OpenEntry(sEntryID.cb, 
-				  (LPENTRYID) sEntryID.lpb, 
-				  &IID_IMessage, 
-				  MAPI_DEFERRED_ERRORS, 
-				  &ulObjType, 
-				  (LPUNKNOWN *) &lpMessage);
+  hr = lpStore->OpenEntry(sEntryID.cb, 
+                          (LPENTRYID) sEntryID.lpb, 
+                          &IID_IMessage, 
+                          MAPI_DEFERRED_ERRORS, 
+                          &ulObjType, 
+                          (LPUNKNOWN *) &lpMessage);
 		  
   if (hr != hrSuccess) {
     setError((int) hr);

@@ -11,7 +11,12 @@ ItemsRemovedJob::~ItemsRemovedJob() {
 }
 
 void ItemsRemovedJob::start() {
-  session->init();
+  HRESULT hr = session->init();
+  if(hr != hrSuccess) {
+    setError((int) hr);
+    emitResult();
+    return;    
+  }
 
   LPMDB lpStore = session->getLpStore();
 

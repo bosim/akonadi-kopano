@@ -15,14 +15,19 @@ ItemsMovedJob::~ItemsMovedJob() {
 }
 
 void ItemsMovedJob::start() {
-  session->init();
+  HRESULT hr = session->init();
+  if(hr != hrSuccess) {
+    setError((int) hr);
+    emitResult();
+    return;    
+  }
 
   LPMDB lpStore = session->getLpStore();
 
   SBinary sEntryID;
   QString remoteIdSrc = sourceCollection.remoteId();
 
-  HRESULT hr = session->EntryIDFromSourceKey(remoteIdSrc, sEntryID);
+  hr = session->EntryIDFromSourceKey(remoteIdSrc, sEntryID);
   if(hr != hrSuccess) {
     setError((int) hr);
     emitResult();

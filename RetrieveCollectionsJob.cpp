@@ -27,7 +27,12 @@ RetrieveCollectionsJob::~RetrieveCollectionsJob() {
 }
 
 void RetrieveCollectionsJob::start() {
-  session->init();
+  HRESULT hr = session->init();
+  if(hr != hrSuccess) {
+    setError((int) hr);
+    emitResult();
+    return;    
+  }
 
   IMAPISession *lpSession = session->getLpSession();  
   LPMDB lpStore = session->getLpStore();  
@@ -35,7 +40,7 @@ void RetrieveCollectionsJob::start() {
   kDebug() << "Fetch collections";
 
   LPSPropValue lpPropVal = NULL;
-  HRESULT hr = HrGetOneProp(lpStore, PR_IPM_SUBTREE_ENTRYID, &lpPropVal);
+  hr = HrGetOneProp(lpStore, PR_IPM_SUBTREE_ENTRYID, &lpPropVal);
   if (hr != hrSuccess) {
     setError((int) hr);
     emitResult();
