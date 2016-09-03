@@ -43,7 +43,9 @@ SettingsDialog::SettingsDialog(MailResource *res, WId parentWindow)
   KWindowSystem::setMainWindow(this, parentWindow);
   setWindowIcon(KIcon("network-server"));
   setWindowTitle(i18n("AirSyncDownload Account Settings"));
-  setButtons(Ok|Cancel);
+  setButtons(Ok|Cancel|User1);
+
+  setButtonText(KDialog::User1, i18n("Clear sync state"));
 
   loadSettings();
 }
@@ -129,6 +131,11 @@ void SettingsDialog::slotButtonClicked(int button)
     {
       reject();
       break;
+    }
+    case User1: 
+    {
+      Settings::self()->setSyncState("");
+      Settings::self()->writeConfig();
     }
   }
 }
