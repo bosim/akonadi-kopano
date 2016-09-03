@@ -45,20 +45,17 @@ class Synchronizer  : public IExchangeImportContentsChanges {
   HRESULT ImportMessageChange(ULONG cValue, LPSPropValue lpPropArray, ULONG ulFlags, LPMESSAGE * lppMessage) {    
     LPSPropValue lpPropValS = PpropFindProp(lpPropArray, cValue, 
                                             PR_SOURCE_KEY);
-    char* strSourceID = NULL;
-    Util::bin2hex(lpPropValS->Value.bin.cb, lpPropValS->Value.bin.lpb, 
-                  &strSourceID, NULL);
-    messagesChanged.push_back(QString(strSourceID));
+    QString sourceKey;
+    Bin2Hex(lpPropValS->Value.bin, sourceKey);
+    messagesChanged.push_back(sourceKey);
        
     return hrSuccess;
   }
   HRESULT ImportMessageDeletion(ULONG ulFlags, LPENTRYLIST lpSourceEntryList) {
-    char* strEntryID;
     for(unsigned int i=0; i < lpSourceEntryList->cValues; i++) {
-      Util::bin2hex(lpSourceEntryList->lpbin[i].cb, 
-                    lpSourceEntryList->lpbin[i].lpb, &strEntryID, NULL);
-
-      messagesDeleted.push_back(QString(strEntryID));
+      QString sourceKey;
+      Bin2Hex(lpSourceEntryList->lpbin[i], sourceKey);
+      messagesDeleted.push_back(sourceKey);
     }
     return hrSuccess;
   }
@@ -67,12 +64,16 @@ class Synchronizer  : public IExchangeImportContentsChanges {
   }
 
   HRESULT ImportPerUserReadStateChange(ULONG cElements, LPREADSTATE lpReadState) {
-    char* strEntryID;
     for(unsigned int i=0; i < cElements; i++) {
-      Util::bin2hex(lpReadState[i].cbSourceKey, lpReadState[i].pbSourceKey,
-                    &strEntryID, NULL);
+      SBinary sourceKey;
+      QString strSourceKey;
 
-      readStateChanged.push_back(QPair<QString, bool>(QString(strEntryID), lpReadState[i].ulFlags > 0));
+      sourceKey.cb = lpReadState[i].cbSourceKey; 
+      sourceKey.lpb = lpReadState[i].pbSourceKey;
+      
+      Bin2Hex(sourceKey, strSourceKey);
+
+      readStateChanged.push_back(QPair<QString, bool>(strSourceKey, lpReadState[i].ulFlags > 0));
     }
     return hrSuccess;
   }

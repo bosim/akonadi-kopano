@@ -57,6 +57,23 @@ void RetrieveItemJob::start() {
     emitResult();
   }
 
+
+  LPSPropValue lpPropVal = NULL;
+  hr = HrGetOneProp(lpMessage, PR_MESSAGE_FLAGS, &lpPropVal);
+  if (hr != hrSuccess) {
+    kDebug() << "GetOneProp failed";
+    setError((int) hr);
+    emitResult(); 
+    return;
+  }
+
+  if(lpPropVal && lpPropVal->Value.ul & MSGFLAG_READ) {
+    item.setFlag(Akonadi::MessageFlags::Seen);
+  }
+  else {
+    item.clearFlag(Akonadi::MessageFlags::Seen);  
+  }
+
   KMime::Message::Ptr msg(new KMime::Message);
   QByteArray bodyText = szMessage;
 

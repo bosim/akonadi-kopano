@@ -113,6 +113,25 @@ void RetrieveItemsJob::start() {
     items << item;
   }
 
+  /* Read flag */
+  for(int i=0; i < synchronizer.readStateChanged.count(); i++) {
+    QPair<QString, bool> readState = synchronizer.readStateChanged[i];
+
+    Akonadi::Item item;
+    item.setParentCollection(collection);
+    item.setRemoteId(collection.remoteId() + ":" + readState.first);
+    item.setRemoteRevision(QString::number(1));
+
+    if(readState.second) {
+      item.setFlag(Akonadi::MessageFlags::Seen);
+    } else {
+      item.clearFlag(Akonadi::MessageFlags::Seen);  
+    }
+
+    items << item;
+  }
+
+ 
   /* Deleted */
   for(int i=0; i < synchronizer.messagesDeleted.count(); i++) {
     QString strSourceKey = synchronizer.messagesDeleted[i];
