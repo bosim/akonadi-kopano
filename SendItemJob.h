@@ -17,9 +17,13 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifndef SENDITEMJOB_H
+#define SENDITEMJOB_H
+
 #include <KJob>
 
-#include <akonadi/resourcebase.h>
+#include <AkonadiAgentBase/ResourceBase>
+
 #include <akonadi/kmime/messageflags.h>
 
 #include <mapi.h>
@@ -50,3 +54,5 @@ class SendItemJob : public KJob {
     LPMESSAGE lpMessage;
     IMAPIFolder *lpFolder;
 };
+
+#endif

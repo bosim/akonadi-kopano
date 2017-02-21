@@ -20,11 +20,11 @@
 #include <MailResource.h>
 #include "settings.h"
 
-#include <Akonadi/Collection>
-#include <Akonadi/CollectionFetchJob>
-#include <akonadi/kmime/specialmailcollections.h>
-#include <akonadi/kmime/specialmailcollectionsrequestjob.h>
-#include <akonadi/resourcesettings.h>
+#include <AkonadiCore/Collection>
+#include <AkonadiCore/CollectionFetchJob>
+#include <AkonadiAgentBase/ResourceSettings>
+#include <Akonadi/KMime/SpecialMailCollections>
+#include <Akonadi/KMime/SpecialMailCollectionsRequestJob>
 
 #include <KWindowSystem>
 #include <KUser>
@@ -41,7 +41,7 @@ SettingsDialog::SettingsDialog(MailResource *res, WId parentWindow)
   ui.setupUi(mainWidget());
 
   KWindowSystem::setMainWindow(this, parentWindow);
-  setWindowIcon(KIcon("network-server"));
+  //setWindowIcon(KIcon("network-server"));
   setWindowTitle(i18n("AirSyncDownload Account Settings"));
   setButtons(Ok|Cancel|User1);
 
@@ -87,21 +87,6 @@ void SettingsDialog::loadSettings()
   }
 
   connect(ui.showPasswordCheck, SIGNAL(toggled(bool)), this, SLOT(showPasswordChecked(bool)));
-}
-
-//--------------------------------------------------------------------------------
-
-void SettingsDialog::targetCollectionReceived(Akonadi::Collection::List collections)
-{
-}
-
-//--------------------------------------------------------------------------------
-
-void SettingsDialog::localFolderRequestJobFinished(KJob *job)
-{
-  if ( !job->error() )
-  {
-  }
 }
 
 //--------------------------------------------------------------------------------

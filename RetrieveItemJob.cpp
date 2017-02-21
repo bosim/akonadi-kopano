@@ -25,7 +25,7 @@ void RetrieveItemJob::start() {
   ECLogger* lpLogger = session->getLpLogger();
   sending_options* sopt = &session->sopt;
 
-  kDebug() << "retrieveItem";
+  qDebug() << "retrieveItem";
 
   QStringList splitArr = item.remoteId().split(":");
   QString collectionSourceKey = splitArr[0];
@@ -50,7 +50,7 @@ void RetrieveItemJob::start() {
 
   char *szMessage = NULL;
   hr = IMToINet(lpSession, lpAddrBook, lpMessage, &szMessage, 
-		*sopt, lpLogger);
+		*sopt);
 
   if (hr != hrSuccess) {
     setError((int) hr);
@@ -61,7 +61,7 @@ void RetrieveItemJob::start() {
   LPSPropValue lpPropVal = NULL;
   hr = HrGetOneProp(lpMessage, PR_MESSAGE_FLAGS, &lpPropVal);
   if (hr != hrSuccess) {
-    kDebug() << "GetOneProp failed";
+    qDebug() << "GetOneProp failed";
     setError((int) hr);
     emitResult(); 
     return;

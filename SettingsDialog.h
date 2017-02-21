@@ -44,8 +44,6 @@ class SettingsDialog : public KDialog
     QString getPassword() const { return ui.passwordEdit->text(); }
 
   private slots:
-    void targetCollectionReceived(Akonadi::Collection::List collections);
-    void localFolderRequestJobFinished(KJob *job);
     void showPasswordChecked(bool checked);
     virtual void slotButtonClicked(int button);
 

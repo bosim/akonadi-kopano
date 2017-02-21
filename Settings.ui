@@ -146,12 +146,6 @@
    <extends>QWidget</extends>
    <header>knuminput.h</header>
   </customwidget>
-  <customwidget>
-   <class>Akonadi::CollectionRequester</class>
-   <extends>QFrame</extends>
-   <header>Akonadi/CollectionRequester</header>
-   <container>1</container>
-  </customwidget>
  </customwidgets>
  <resources/>
 </ui>

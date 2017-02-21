@@ -17,9 +17,12 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifndef ITEMSREMOVEDJOB_H
+#define ITEMSREMOVEDJOB_H
+
 #include <KJob>
 
-#include <akonadi/resourcebase.h>
+#include <AkonadiAgentBase/resourcebase.h>
 
 #include <mapi.h>
 #include <mapiutil.h>
@@ -48,3 +51,5 @@ class ItemsRemovedJob : public KJob {
     IMAPIFolder *lpFolder;	
 
 };
+
+#endif

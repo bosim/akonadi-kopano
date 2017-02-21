@@ -7,6 +7,7 @@
 #include "edkmdb.h"
 #include "edkguid.h"
 
+#include <kopano/stringutil.h>
 #include <kopano/Util.h>
 
 HRESULT RawEntryIDFromSourceKey(LPMDB lpStore, SBinary const& folderSource, SBinary const& itemSource, SBinary& entryID);

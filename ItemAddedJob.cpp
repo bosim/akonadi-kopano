@@ -25,7 +25,6 @@ void ItemAddedJob::start() {
   IMAPISession* lpSession = session->getLpSession();;
   LPMDB lpStore = session->getLpStore();
   IAddrBook* lpAddrBook = session->getLpAddrBook();;
-  ECLogger* lpLogger = session->getLpLogger();;
   delivery_options* dopt = &session->dopt;
 
   SBinary sEntryID;
@@ -36,7 +35,7 @@ void ItemAddedJob::start() {
                           NULL, MAPI_MODIFY, &ulObjType, 
                           (LPUNKNOWN *) &lpFolder);
   if (hr != hrSuccess) {
-    kDebug() << "OpenEntry failed";
+    qDebug() << "OpenEntry failed";
     setError((int) hr);
     emitResult(); 
     return;
@@ -59,9 +58,9 @@ void ItemAddedJob::start() {
   QByteArray bodyText = msg->encodedContent(true);
 
   hr = IMToMAPI(lpSession, lpStore, lpAddrBook, lpMessage, 
-                bodyText.constData(), *dopt, lpLogger);
+                bodyText.constData(), *dopt);
   if (hr != hrSuccess) {
-    kDebug() << "IMToMAPI failed";
+    qDebug() << "IMToMAPI failed";
     setError((int) hr);
     emitResult(); 
     return;
@@ -83,7 +82,7 @@ void ItemAddedJob::start() {
   LPSPropValue lpPropVal = NULL;
   hr = HrGetOneProp(lpMessage, PR_SOURCE_KEY, &lpPropVal);
   if (hr != hrSuccess) {
-    kDebug() << "GetOneProp failed";
+    qDebug() << "GetOneProp failed";
     setError((int) hr);
     emitResult(); 
     return;

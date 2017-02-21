@@ -58,7 +58,7 @@ void SendItemJob::start() {
   }
 
   hr = IMToMAPI(lpSession, lpStore, lpAddrBook, lpMessage, 
-                bodyText.constData(), *dopt, lpLogger);
+                bodyText.constData(), *dopt);
   if (hr != hrSuccess) {
     setError((int) hr);
     emitResult();

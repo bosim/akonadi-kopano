@@ -34,8 +34,5 @@ void Hex2Bin(QString const& input, SBinary& output) {
 }
 
 void Bin2Hex(SBinary const& input, QString& output) {
-  char* tmp = NULL;
-  Util::bin2hex(input.cb, input.lpb, &tmp, NULL);
-  output = tmp;
-  delete tmp;
+  output = bin2hex(input.cb, input.lpb).c_str();
 }

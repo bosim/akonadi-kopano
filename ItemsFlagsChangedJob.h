@@ -17,9 +17,12 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifndef ITEMSFLAGSCHANGEDJOB_H
+#define ITEMSFLAGSCHANGEDJOB_H
+
 #include <KJob>
 
-#include <akonadi/resourcebase.h>
+#include <AkonadiAgentBase/resourcebase.h>
 #include <akonadi/kmime/messageflags.h>
 
 #include <mapi.h>
@@ -52,3 +55,5 @@ class ItemsFlagsChangedJob : public KJob {
     /* Local */
     LPMESSAGE lpMessage;
 };
+
+#endif

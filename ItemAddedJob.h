@@ -17,9 +17,12 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifndef ITEMADDEDJOB_H
+#define ITEMADDEDJOB_H
+
 #include <KJob>
 
-#include <akonadi/resourcebase.h>
+#include <AkonadiAgentBase/resourcebase.h>
 #include <akonadi/kmime/messageflags.h>
 
 #include <mapi.h>
@@ -51,3 +54,5 @@ class ItemAddedJob : public KJob {
     IMAPIFolder *lpFolder;	
     LPMESSAGE lpMessage;
 };
+
+#endif

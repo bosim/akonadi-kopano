@@ -20,9 +20,10 @@
 #ifndef AIRSYNCDOWNLOADRESOURCE_H
 #define AIRSYNCDOWNLOADRESOURCE_H
 
-#include <Akonadi/ResourceBase>
-#include <Akonadi/TransportResourceBase>
-#include <Akonadi/ItemCreateJob>
+#include <AkonadiAgentBase/ResourceBase>
+#include <AkonadiAgentBase/TransportResourceBase>
+#include <AkonadiCore/ItemCreateJob>
+
 #include <KMime/Message>
 
 #include "ItemAddedJob.h"

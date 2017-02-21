@@ -17,9 +17,12 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifndef RETRIEVECOLLECTIONSJOB_H
+#define RETRIEVECOLLECTIONSJOB_H
+
 #include <KJob>
 
-#include <akonadi/resourcebase.h>
+#include <AkonadiAgentBase/ResourceBase>
 
 #include <mapi.h>
 #include <mapiutil.h>
@@ -51,3 +54,5 @@ class RetrieveCollectionsJob : public KJob {
     LPSRowSet lpRowSet;
 
 };
+
+#endif

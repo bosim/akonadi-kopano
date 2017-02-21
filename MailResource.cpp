@@ -17,9 +17,9 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <Akonadi/ChangeRecorder>
-#include <Akonadi/CollectionFetchScope>
-#include <Akonadi/ItemFetchScope>
+#include <AkonadiCore/ChangeRecorder>
+#include <AkonadiCore/CollectionFetchScope>
+#include <AkonadiCore/ItemFetchScope>
 
 #include <MailResource.h>
 #include <SettingsDialog.h>
@@ -39,7 +39,7 @@
 
 MailResource::MailResource(const QString &id)
   : ResourceBase(id), session(0) {
-  kDebug() << "Constructor";
+  qDebug() << "Constructor";
 
   changeRecorder()->fetchCollection(true);
   changeRecorder()->itemFetchScope().fetchFullPayload(true);
@@ -60,7 +60,7 @@ MailResource::MailResource(const QString &id)
 
   loadState();
 
-  kDebug() << "Constructed";
+  qDebug() << "Constructed";
 }
 
 //--------------------------------------------------------------------------------
@@ -108,7 +108,7 @@ void MailResource::saveState() {
 
 void MailResource::retrieveCollections()
 {
-  kDebug() << "Retrieving collections";
+  qDebug() << "Retrieving collections";
 
   if ( status() == NotConfigured )
   {
@@ -133,12 +133,12 @@ void MailResource::retrieveCollections()
 void MailResource::retrieveCollectionsResult(KJob* job) {
   RetrieveCollectionsJob* req = qobject_cast<RetrieveCollectionsJob*>(job);
   if(req->error()) {
-    QString errorString = QString("MAPI error: ") + req->error();
-    kDebug() << "Error " << errorString;
+    QString errorString = QString("MAPI error: ") + req->errorString();
+    qDebug() << "Error " << errorString;
     cancelTask(errorString);
   }
   else {
-    kDebug() << "retrieveCollectionsResult job is done";
+    qDebug() << "retrieveCollectionsResult job is done";
     collectionsRetrieved(req->collections);
   }
 }
@@ -156,14 +156,14 @@ void MailResource::retrieveItems(const Akonadi::Collection &collection)
 void MailResource::retrieveItemsResult(KJob* job) {
   RetrieveItemsJob* req = qobject_cast<RetrieveItemsJob*>(job);
   if(req->error()) {
-    QString errorString = QString("MAPI error: ") + req->error();
-    kDebug() << "Error " << errorString;
+    QString errorString = QString("MAPI error: ") + req->errorString();
+    qDebug() << "Error " << errorString;
     cancelTask(errorString);
   }
   else {
     saveState();
 
-    kDebug() << "retrieveItemsResult job is done";
+    qDebug() << "retrieveItemsResult job is done";
     if(req->fullSync)  {
       itemsRetrieved(req->items);
     }
@@ -188,12 +188,12 @@ bool MailResource::retrieveItem(const Akonadi::Item &item, const QSet<QByteArray
 void MailResource::retrieveItemResult(KJob* job) {
   RetrieveItemJob* req = qobject_cast<RetrieveItemJob*>(job);
   if(req->error()) {
-    QString errorString = QString("MAPI error: ") + req->error();
-    kDebug() << "Error " << errorString;
+    QString errorString = QString("MAPI error: ") + req->errorString();
+    qDebug() << "Error " << errorString;
     cancelTask(errorString);
   }
   else {
-    kDebug() << "retrieveItemsResult job is done";
+    qDebug() << "retrieveItemsResult job is done";
     itemRetrieved(req->item);
   }
 }
@@ -212,12 +212,12 @@ void MailResource::itemsMoved(const Akonadi::Item::List &items, const Akonadi::C
 void MailResource::itemsMovedResult(KJob* job) {
   ItemsMovedJob* req = qobject_cast<ItemsMovedJob*>(job);
   if(req->error()) {
-    QString errorString = QString("MAPI error: ") + req->error();
-    kDebug() << "Error " << errorString;
+    QString errorString = QString("MAPI error: ") + req->errorString();
+    qDebug() << "Error " << errorString;
     cancelTask(errorString);
   }
   else {
-    kDebug() << "itemsMovedResult job is done";
+    qDebug() << "itemsMovedResult job is done";
     changesCommitted(req->items);
   }
 }
@@ -235,12 +235,12 @@ void MailResource::itemsRemoved(const Akonadi::Item::List &items)
 void MailResource::itemsRemovedResult(KJob* job) {
   ItemsRemovedJob* req = qobject_cast<ItemsRemovedJob*>(job);
   if(req->error()) {
-    QString errorString = QString("MAPI error: ") + req->error();
-    kDebug() << "Error " << errorString;
+    QString errorString = QString("MAPI error: ") + req->errorString();
+    qDebug() << "Error " << errorString;
     cancelTask(errorString);
   }
   else {
-    kDebug() << "itemsRemovedResult job is done";
+    qDebug() << "itemsRemovedResult job is done";
     changeProcessed(); 
   }
 }
@@ -258,12 +258,12 @@ void MailResource::itemAdded(const Akonadi::Item &item, const Akonadi::Collectio
 void MailResource::itemAddedResult(KJob* job) {
   ItemAddedJob* req = qobject_cast<ItemAddedJob*>(job);
   if(req->error()) {
-    QString errorString = QString("MAPI error: ") + req->error();
-    kDebug() << "Error " << errorString;
+    QString errorString = QString("MAPI error: ") + req->errorString();
+    qDebug() << "Error " << errorString;
     cancelTask(errorString);
   }
   else {
-    kDebug() << "itemsAddedResult job is done";
+    qDebug() << "itemsAddedResult job is done";
     changeCommitted(req->item);
   }
 }
@@ -280,12 +280,12 @@ void MailResource::itemsFlagsChanged(const Akonadi::Item::List &items, const QSe
 void MailResource::itemsFlagsChangedResult(KJob* job) {
   ItemsFlagsChangedJob* req = qobject_cast<ItemsFlagsChangedJob*>(job);
   if(req->error()) {
-    QString errorString = QString("MAPI error: ") + req->error();
-    kDebug() << "Error " << errorString;
+    QString errorString = QString("MAPI error: ") + req->errorString();
+    qDebug() << "Error " << errorString;
     cancelTask(errorString);
   }
   else {
-    kDebug() << "itemsFlagsChanged job is done";
+    qDebug() << "itemsFlagsChanged job is done";
     changesCommitted(req->items);
   }
 }
@@ -323,7 +323,7 @@ void MailResource::loadConfiguration()
     delete session;
   }
 
-  Settings::self()->readConfig();
+  Settings::self()->load();
 
   KWallet::Wallet *wallet = KWallet::Wallet::openWallet(KWallet::Wallet::NetworkWallet(), winIdForDialogs());
   if ( wallet )
@@ -335,7 +335,7 @@ void MailResource::loadConfiguration()
   }
 
   if(!password.length()) {
-    kDebug() << "Password is empty!";
+    qDebug() << "Password is empty!";
   }
 
   QString server;

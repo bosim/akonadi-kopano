@@ -35,7 +35,8 @@ void RetrieveItemsJob::start() {
     return;
   }
 
-  kDebug() << "Collection " << collection.remoteId();
+  qDebug() << "Collection " << collection.remoteId();
+  qDebug() << "Mimetypes " << collection.contentMimeTypes();
 
   SBinary sEntryID;
   QString cacheEntryID;
@@ -105,7 +106,7 @@ void RetrieveItemsJob::start() {
   for(int i=0; i < synchronizer.messagesChanged.count(); i++) {
     QString strSourceKey = synchronizer.messagesChanged[i];
 
-    Akonadi::Item item;
+    Akonadi::Item item(KMime::Message::mimeType());
     item.setParentCollection(collection);
     item.setRemoteId(collection.remoteId() + ":" + strSourceKey);
     item.setRemoteRevision(QString::number(1));
@@ -117,7 +118,7 @@ void RetrieveItemsJob::start() {
   for(int i=0; i < synchronizer.readStateChanged.count(); i++) {
     QPair<QString, bool> readState = synchronizer.readStateChanged[i];
 
-    Akonadi::Item item;
+    Akonadi::Item item(KMime::Message::mimeType());
     item.setParentCollection(collection);
     item.setRemoteId(collection.remoteId() + ":" + readState.first);
     item.setRemoteRevision(QString::number(1));
@@ -136,7 +137,7 @@ void RetrieveItemsJob::start() {
   for(int i=0; i < synchronizer.messagesDeleted.count(); i++) {
     QString strSourceKey = synchronizer.messagesDeleted[i];
 
-    Akonadi::Item item;
+    Akonadi::Item item(KMime::Message::mimeType());
     item.setParentCollection(collection);
     item.setRemoteId(collection.remoteId() + ":" + strSourceKey);
     item.setRemoteRevision(QString::number(1));

@@ -47,11 +47,11 @@ void ItemsFlagsChangedJob::start() {
     }
     
     if(addedFlags.contains(Akonadi::MessageFlags::Seen)) {
-      kDebug() << "Added MSGFLAG_READ";
+      qDebug() << "Added MSGFLAG_READ";
       lpMessage->SetReadFlag(SUPPRESS_RECEIPT);
     } 
     else if(removedFlags.contains(Akonadi::MessageFlags::Seen)) {
-      kDebug() << "Removed MSGFLAG_READ";
+      qDebug() << "Removed MSGFLAG_READ";
       lpMessage->SetReadFlag(CLEAR_READ_FLAG);
     }
     

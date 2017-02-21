@@ -37,7 +37,7 @@ void RetrieveCollectionsJob::start() {
   IMAPISession *lpSession = session->getLpSession();  
   LPMDB lpStore = session->getLpStore();  
 
-  kDebug() << "Fetch collections";
+  qDebug() << "Fetch collections";
 
   LPSPropValue lpPropVal = NULL;
   hr = HrGetOneProp(lpStore, PR_IPM_SUBTREE_ENTRYID, &lpPropVal);
@@ -130,12 +130,11 @@ void RetrieveCollectionsJob::start() {
     LPSPropValue lpProps = lpRowSet->aRow[i].lpProps;
 
     if (PROP_TYPE(lpProps[CONTAINERCLASS].ulPropTag) == PT_STRING8 &&
-      stricmp(lpProps[CONTAINERCLASS].Value.lpszA, "IPM") != 0 && 
-      stricmp(lpProps[CONTAINERCLASS].Value.lpszA, "IPF.NOTE") != 0
+        std::string(lpProps[CONTAINERCLASS].Value.lpszA) != "IPM" && 
+        std::string(lpProps[CONTAINERCLASS].Value.lpszA) != "IPF.NOTE"
     ) {
 	continue;
     }
-
 
     if (PROP_TYPE(lpProps[NAME].ulPropTag) == PT_UNICODE) {
       char folderName[255];
@@ -163,9 +162,9 @@ void RetrieveCollectionsJob::start() {
 
       collections.append(collection);
 
-      kDebug() << "Got " << folderName;
-      kDebug() << "EntryID " << strSourceKey;
-      kDebug() << "Parent EntryID " << strParentSourceKey;
+      qDebug() << "Got " << folderName;
+      qDebug() << "EntryID " << strSourceKey;
+      qDebug() << "Parent EntryID " << strParentSourceKey;
 
     }
   }

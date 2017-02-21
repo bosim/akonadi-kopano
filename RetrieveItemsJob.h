@@ -17,9 +17,13 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifndef RETRIEVEITEMSJOB_H
+#define RETRIEVEITEMSJOB_H
+
 #include <KJob>
 
-#include <akonadi/resourcebase.h>
+#include <AkonadiAgentBase/ResourceBase>
+
 #include <akonadi/kmime/messageflags.h>
 
 #include <mapi.h>
@@ -52,3 +56,5 @@ class RetrieveItemsJob : public KJob {
     IExchangeExportChanges *lpIEEC;
     LPSTREAM lpStream;
 };
+
+#endif

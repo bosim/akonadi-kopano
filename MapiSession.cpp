@@ -66,7 +66,7 @@ int Session::init()
 
   HRESULT hr = S_OK;
 
-  hr = HrOpenECSession(lpLogger, &lpSession, "akonadi_kopano", "0", 
+  hr = HrOpenECSession(&lpSession, "akonadi_kopano", "0", 
 		       username.toStdWString().c_str(), 
 		       password.toStdWString().c_str(), 
 		       server.toStdString().c_str(),

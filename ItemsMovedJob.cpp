@@ -34,7 +34,7 @@ void ItemsMovedJob::start() {
     return;
   }
 
-  kDebug() << "Source " << remoteIdSrc;
+  qDebug() << "Source " << remoteIdSrc;
 
   ULONG ulObjType;
   hr = lpStore->OpenEntry(sEntryID.cb, 
@@ -50,7 +50,7 @@ void ItemsMovedJob::start() {
 
   QString remoteIdDst = destinationCollection.remoteId();
 
-  kDebug() << "Destination " << remoteIdDst;
+  qDebug() << "Destination " << remoteIdDst;
 
   hr = session->EntryIDFromSourceKey(remoteIdDst, sEntryID);
   if(hr != hrSuccess) {
@@ -70,7 +70,7 @@ void ItemsMovedJob::start() {
     return;
   }
 
-  kDebug() << "Items count " << items.count();
+  qDebug() << "Items count " << items.count();
 
   SBinaryArray ba = {0, NULL};
   ba.cValues = items.count();
@@ -83,7 +83,7 @@ void ItemsMovedJob::start() {
     LPMESSAGE lpSrcMessage = NULL;
     LPMESSAGE lpDstMessage = NULL;
 
-    kDebug() << "Item " << itemSourceKey;
+    qDebug() << "Item " << itemSourceKey;
 
     session->EntryIDFromSourceKey(remoteIdSrc, itemSourceKey, sEntryID);
 
@@ -92,7 +92,7 @@ void ItemsMovedJob::start() {
                        (LPUNKNOWN*)&lpSrcMessage);
 
     if(hr != hrSuccess) {
-      kDebug() << "OpenEntry failed";
+      qDebug() << "OpenEntry failed";
       setError((int) hr);
       emitResult();
       return;
@@ -102,7 +102,7 @@ void ItemsMovedJob::start() {
                                     &lpDstMessage);
 
     if(hr != hrSuccess) {
-      kDebug() << "CreateMessage failed";
+      qDebug() << "CreateMessage failed";
       setError((int) hr);
       emitResult();
       return;
@@ -112,7 +112,7 @@ void ItemsMovedJob::start() {
                               (LPVOID) lpDstMessage, 0, NULL);
 
     if(hr != hrSuccess) {
-      kDebug() << "CopyTo failed";
+      qDebug() << "CopyTo failed";
       setError((int) hr);
       emitResult();
       return;
@@ -121,7 +121,7 @@ void ItemsMovedJob::start() {
     hr = lpDstMessage->SaveChanges(0);
 
     if(hr != hrSuccess) {
-      kDebug() << "SaveChanges failed";
+      qDebug() << "SaveChanges failed";
       setError((int) hr);
       emitResult();
       return;
@@ -135,7 +135,7 @@ void ItemsMovedJob::start() {
     LPSPropValue lpPropVal = NULL;
     hr = HrGetOneProp(lpDstMessage, PR_SOURCE_KEY, &lpPropVal);
     if (hr != hrSuccess) {
-      kDebug() << "GetOneProp failed";
+      qDebug() << "GetOneProp failed";
       setError((int) hr);
       emitResult(); 
       return;
@@ -144,7 +144,7 @@ void ItemsMovedJob::start() {
     QString strSourceKey;
     Bin2Hex(lpPropVal->Value.bin, strSourceKey);
     
-    kDebug() << "New source key " << strSourceKey;
+    qDebug() << "New source key " << strSourceKey;
 
     items[i].setRemoteId(remoteIdDst + ":" + strSourceKey);
     items[i].setRemoteRevision(QString::number(1));
@@ -156,7 +156,7 @@ void ItemsMovedJob::start() {
 
   lpSrcFolder->DeleteMessages(&ba, 0, NULL, 0);
 
-  kDebug() << "Emitting result";
+  qDebug() << "Emitting result";
 
   emitResult();
 }

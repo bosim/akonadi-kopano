@@ -20,7 +20,7 @@
 #ifndef MAPISESSION_H
 #define MAPISESSION_H
 
-#include <akonadi/resourcebase.h>
+#include <AkonadiAgentBase/resourcebase.h>
 #include <QObject>
 #include <QNetworkAccessManager>
 #include <QNetworkRequest>

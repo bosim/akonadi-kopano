@@ -17,9 +17,13 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifndef RETRIEVEITEMJOB_H
+#define RETRIEVEITEMJOB_H
+
 #include <KJob>
 
-#include <akonadi/resourcebase.h>
+#include <AkonadiAgentBase/ResourceBase>
+
 #include <akonadi/kmime/messageflags.h>
 
 #include <mapi.h>
@@ -50,3 +54,5 @@ class RetrieveItemJob : public KJob {
     /* Local */
     LPMESSAGE lpMessage;
 };
+
+#endif
